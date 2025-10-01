@@ -1,0 +1,383 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unlocking the Flare Gun Safe: Memory Match</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-color: #F4E4BC; /* Sandy beige */
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+        }
+        canvas {
+            border: 3px solid #2E7D32; /* Jungle green */
+            background-color: #F4E4BC; /* Sandy beige */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+        }
+        #gameInfo {
+            text-align: center;
+            margin: 10px 0;
+            color: #2E7D32; /* Jungle green */
+        }
+        #flips {
+            font-size: 20px;
+            margin: 5px 0;
+            font-weight: 700;
+        }
+        #message {
+            font-size: 18px;
+            color: #4A90E2; /* Ocean blue */
+            margin-bottom: 10px;
+            font-style: italic;
+        }
+        #successPopup, #failurePopup {
+            display: none;
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.3);
+            border: 3px solid #2E7D32;
+            animation: fadeIn 0.5s ease-in;
+            z-index: 1000;
+        }
+        #successPopup p, #failurePopup p {
+            font-size: 24px;
+            margin: 10px 0;
+            font-weight: 700;
+        }
+        #successPopup button, #failurePopup button {
+            padding: 12px 24px;
+            font-size: 18px;
+            background-color: #FF6F61; /* Coral */
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.2s, background-color 0.3s;
+        }
+        #successPopup button:hover, #failurePopup button:hover {
+            background-color: #E55A50; /* Darker coral */
+            transform: scale(1.05);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translate(-50%, -60%); }
+            to { opacity: 1; transform: translate(-50%, -50%); }
+        }
+        .card {
+            background-color: #FDF6E3; /* Parchment */
+            border: 2px solid #2E7D32;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            cursor: pointer;
+            position: absolute;
+            transition: transform 0.5s;
+            transform-style: preserve-3d;
+        }
+        .card.flipped {
+            background-color: #26A69A; /* Teal */
+            transform: rotateY(180deg);
+        }
+        .card.matched {
+            background-color: #FF6F61; /* Coral for matched cards */
+            transform: translateY(100vh); /* Fall off screen */
+            transition: transform 0.7s ease-in, background-color 0.2s;
+        }
+        @media (max-width: 600px) {
+            #gameInfo, #message { font-size: 16px; }
+            #flips { font-size: 16px; }
+            #successPopup p, #failurePopup p { font-size: 18px; }
+            #successPopup button, #failurePopup button { font-size: 16px; padding: 10px 20px; }
+            .card { font-size: 14px; }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameInfo">
+        <div id="flips">Flips: 0</div>
+        <div id="message">Radio: "Flare’s our only shot; storms are blocking GPS."</div>
+    </div>
+    <canvas id="gameCanvas"></canvas>
+    <div id="successPopup">
+        <p id="successMessage">Safe Unlocked! Flare gun and bullets found, but both are in locked cases.<br>Code: <span id="successCode"></span></p>
+        <button id="continueButton">Continue</button>
+    </div>
+    <div id="failurePopup">
+        <p id="failurePopup">Too many flips! Try again?</p>
+        <button id="retryButton">Retry</button>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const cardSymbols = [
+            '🛩️', '🛩️', '🧳', '🧳', '📻', '📻', '🔑', '🔑',
+            '🧰', '🧰', '🛠️', '🛠️', '📦', '📦', '🔒', '🔒',
+            '🧪', '🧪', '🧴', '🧴', '🛡️', '🛡️', '🪓', '🪓',
+            '🗝️', '🗝️', '🔨', '🔨', '🧵', '🧵', '🛫', '🛫',
+            '🧨', '🧨', '🛬', '🛬'
+        ];
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let flips = 0;
+        let gameOver = false;
+        let isProcessing = false; // Lock for click processing
+        const maxFlips = 20;
+        const code = '4827';
+
+        // Shuffle array
+        function shuffle(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+        }
+
+        // Set canvas size
+        function resizeCanvas() {
+            const size = Math.min(window.innerWidth, window.innerHeight) * 0.8;
+            canvas.width = Math.floor(size);
+            canvas.height = Math.floor(size); // Square for card grid
+            drawScene();
+            setupCards();
+        }
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+
+        // Draw task-related scene (safe and wreckage)
+        function drawScene() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Sandy background
+            ctx.fillStyle = '#F4E4BC';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Safe in center
+            ctx.font = `${canvas.width / 6}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillText('🔐', canvas.width / 2 + 4, canvas.height / 2 + 4);
+            ctx.fillStyle = '#2E7D32';
+            ctx.fillText('🔐', canvas.width / 2, canvas.height / 2);
+            // Wreckage around edges
+            ctx.font = `${canvas.width / 12}px Arial`;
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.2)';
+            ctx.fillText('🛩️', canvas.width * 0.1 + 4, canvas.height * 0.1 + 4);
+            ctx.fillText('🧳', canvas.width * 0.9 + 4, canvas.height * 0.1 + 4);
+            ctx.fillText('📻', canvas.width * 0.1 + 4, canvas.height * 0.9 + 4);
+            ctx.fillText('🔑', canvas.width * 0.9 + 4, canvas.height * 0.9 + 4);
+            ctx.fillStyle = '#2E7D32';
+            ctx.fillText('🛩️', canvas.width * 0.1, canvas.height * 0.1);
+            ctx.fillText('🧳', canvas.width * 0.9, canvas.height * 0.1);
+            ctx.fillText('📻', canvas.width * 0.1, canvas.height * 0.9);
+            ctx.fillText('🔑', canvas.width * 0.9, canvas.height * 0.9);
+        }
+
+        // Setup cards (6x6 grid)
+        function setupCards() {
+            cards = [];
+            const cardSize = canvas.width / 7;
+            const offset = (canvas.width - cardSize * 6) / 7;
+            shuffle(cardSymbols);
+            for (let i = 0; i < 36; i++) {
+                const row = Math.floor(i / 6);
+                const col = i % 6;
+                const x = offset + col * (cardSize + offset);
+                const y = offset + row * (cardSize + offset);
+                cards.push({
+                    x: x,
+                    y: y,
+                    width: cardSize,
+                    height: cardSize,
+                    symbol: cardSymbols[i],
+                    flipped: false,
+                    matched: false,
+                    falling: false
+                });
+            }
+            drawCards();
+        }
+
+        // Draw cards
+        function drawCards() {
+            drawScene();
+            cards.forEach(card => {
+                if (card.matched && !card.falling) return; // Skip fully matched cards
+                ctx.fillStyle = card.flipped ? '#26A69A' : card.matched ? '#FF6F61' : '#FDF6E3';
+                ctx.beginPath();
+                ctx.roundRect(card.x, card.y, card.width, card.height, 5);
+                ctx.fill();
+                ctx.strokeStyle = '#2E7D32';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                if (card.flipped || card.matched) {
+                    ctx.save();
+                    ctx.translate(card.x + card.width / 2, card.y + card.height / 2);
+                    ctx.scale(-1, 1); // Mirror for flip effect
+                    ctx.font = `${card.width / 2}px Arial`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillStyle = '#FFFFFF';
+                    ctx.fillText(card.symbol, 0, 0);
+                    ctx.restore();
+                }
+            });
+        }
+
+        // Generate code
+        function generateCode() {
+            return code; // Fixed code for safe
+        }
+
+        // Reset game
+        function resetGame() {
+            shuffle(cardSymbols);
+            cards = [];
+            flippedCards = [];
+            matchedPairs = 0;
+            flips = 0;
+            gameOver = false;
+            isProcessing = false;
+            document.getElementById('flips').textContent = 'Flips: 0';
+            document.getElementById('successPopup').style.display = 'none';
+            document.getElementById('failurePopup').style.display = 'none';
+            setupCards();
+        }
+
+        // Handle card click
+        function handleClick(x, y) {
+            if (gameOver || isProcessing) return;
+            const card = cards.find(c => !c.matched && !c.flipped && !c.falling && x >= c.x && x <= c.x + c.width && y >= c.y && y <= c.y + c.height);
+            if (card) {
+                isProcessing = true; // Lock clicks
+                card.flipped = true;
+                flippedCards.push(card);
+                flips++;
+                document.getElementById('flips').textContent = 'Flips: ' + flips;
+                drawCards();
+                if (flippedCards.length === 2) {
+                    const [card1, card2] = flippedCards;
+                    if (card1.symbol === card2.symbol) {
+                        card1.falling = card2.falling = true;
+                        matchedPairs++;
+                        setTimeout(() => {
+                            card1.matched = card2.matched = true;
+                            flippedCards = [];
+                            isProcessing = false;
+                            drawCards();
+                            if (matchedPairs === 18) {
+                                gameOver = true;
+                                if (flips <= maxFlips) {
+                                    document.getElementById('successCode').textContent = generateCode();
+                                    document.getElementById('successPopup').style.display = 'block';
+                                } else {
+                                    document.getElementById('failureMessage').textContent = 'Too many flips! Try again?';
+                                    document.getElementById('failurePopup').style.display = 'block';
+                                }
+                            }
+                        }, 700); // Match fall animation duration
+                    } else {
+                        setTimeout(() => {
+                            card1.flipped = card2.flipped = false;
+                            flippedCards = [];
+                            isProcessing = false;
+                            drawCards();
+                        }, 1000); // Non-match flip-back duration
+                    }
+                } else {
+                    isProcessing = false; // Unlock after single flip
+                }
+            }
+        }
+
+        // Canvas click handler
+        canvas.addEventListener('click', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+            handleClick(x, y);
+        });
+
+        // Touch handler
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const x = e.touches[0].clientX - rect.left;
+            const y = e.touches[0].clientY - rect.top;
+            handleClick(x, y);
+        });
+
+        // Event listeners
+        document.getElementById('continueButton').addEventListener('click', resetGame);
+        document.getElementById('retryButton').addEventListener('click', resetGame);
+
+        // Animation loop
+        function animate() {
+            drawCards();
+            requestAnimationFrame(animate);
+        }
+
+        // Start game
+        resetGame();
+        animate();
+    </script>
+</body>
+</html>

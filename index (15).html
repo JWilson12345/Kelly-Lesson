@@ -1,0 +1,285 @@
+<script type="text/javascript">
+        var gk_isXlsx = false;
+        var gk_xlsxFileLookup = {};
+        var gk_fileData = {};
+        function filledCell(cell) {
+          return cell !== '' && cell != null;
+        }
+        function loadFileData(filename) {
+        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+            try {
+                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                var firstSheetName = workbook.SheetNames[0];
+                var worksheet = workbook.Sheets[firstSheetName];
+
+                // Convert sheet to JSON to filter blank rows
+                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                // Filter out blank rows (rows where all cells are empty, null, or undefined)
+                var filteredData = jsonData.filter(row => row.some(filledCell));
+
+                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
+                var headerRowIndex = filteredData.findIndex((row, index) =>
+                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                );
+                // Fallback
+                if (headerRowIndex === -1 || headerRowIndex > 25) {
+                  headerRowIndex = 0;
+                }
+
+                // Convert filtered JSON back to CSV
+                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
+                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                return csv;
+            } catch (e) {
+                console.error(e);
+                return "";
+            }
+        }
+        return gk_fileData[filename] || "";
+        }
+        </script><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stage 5: Unlocking the Bullets Case</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #1e3c72, #2a5298);
+            color: #fff;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .game-wrapper {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            max-width: 600px;
+            width: 100%;
+            text-align: center;
+        }
+        h1 {
+            font-size: 2.5em;
+            margin: 0.5em 0;
+            color: #ffd700;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+        p {
+            font-size: 1.1em;
+            line-height: 1.5;
+            margin: 10px 0;
+            color: #e0e0e0;
+        }
+        #game-container {
+            width: 500px;
+            height: 400px;
+            border: 3px solid #ffd700;
+            border-radius: 10px;
+            position: relative;
+            background: linear-gradient(#333, #555);
+            margin: 20px auto;
+            overflow: hidden;
+        }
+        .debris {
+            position: absolute;
+            width: 25px;
+            height: 25px;
+            background: radial-gradient(circle, #ff4d4d, #b30000);
+            border-radius: 50%;
+            cursor: pointer;
+            transition: transform 0.2s ease;
+        }
+        .debris:hover {
+            transform: scale(1.2);
+        }
+        #timer, #message {
+            font-size: 1.5em;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #ffd700;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5);
+        }
+        #start-btn, #retry-btn {
+            padding: 12px 24px;
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #fff;
+            background-color: #4caf50;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.3s, transform 0.2s;
+            margin: 10px;
+        }
+        #start-btn:hover, #retry-btn:hover {
+            background-color: #45a049;
+            transform: translateY(-2px);
+        }
+        #win-screen, #fail-screen {
+            display: none;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: rgba(255, 255, 255, 0.9);
+            border-radius: 10px;
+            width: 80%;
+            max-width: 400px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.4);
+        }
+        #win-screen h2 {
+            color: #4caf50;
+            font-size: 1.8em;
+        }
+        #fail-screen h2 {
+            color: #f44336;
+            font-size: 1.8em;
+        }
+        #win-screen p, #fail-screen p {
+            color: #333;
+            font-size: 1.1em;
+        }
+        .flare-animation {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+        .flare {
+            width: 20px;
+            height: 20px;
+            background: #ff4500;
+            border-radius: 50%;
+            animation: flareLaunch 2s ease-out forwards;
+        }
+        @keyframes flareLaunch {
+            0% { transform: translateY(0); opacity: 1; }
+            100% { transform: translateY(-100vh); opacity: 0; }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-wrapper">
+        <h1>Stage 5: Unlocking the Bullets Case</h1>
+        <p><strong>Clue:</strong> "Quick reflexes needed—test your speed like dodging debris."</p>
+        <p><strong>Base Message:</strong> "The leak's worsening—get that flare up! We see smoke; is that you?"</p>
+        <p><strong>Mission:</strong> Click 25 pieces of debris in under 90 seconds to unlock the bullet case and fire the flare!</p>
+        <button id="start-btn">Start Mission</button>
+        <div id="timer">Time: 90 seconds</div>
+        <div id="game-container"></div>
+        <div id="message">Hits: 0 / 25</div>
+
+        <div id="win-screen">
+            <h2>Rescued! You Saved the Day!</h2>
+            <p><strong>Code Unlocked:</strong> FLARE-READY</p>
+            <p>You loaded the gun and fired the flare! It arcs into the sky, spotted by the base. The chopper arrives just as the plane explodes safely in the distance.</p>
+            <button id="retry-btn">Play Again</button>
+        </div>
+
+        <div id="fail-screen">
+            <h2>Mission Failed!</h2>
+            <p>The leak worsened, and you couldn't unlock the bullets in time. Try again!</p>
+            <button id="retry-btn">Retry Mission</button>
+        </div>
+
+        <div id="flare-animation" class="flare-animation">
+            <div class="flare"></div>
+        </div>
+    </div>
+
+    <script>
+        const gameContainer = document.getElementById('game-container');
+        const timerElement = document.getElementById('timer');
+        const messageElement = document.getElementById('message');
+        const startBtn = document.getElementById('start-btn');
+        const retryButtons = document.querySelectorAll('#retry-btn');
+        const winScreen = document.getElementById('win-screen');
+        const failScreen = document.getElementById('fail-screen');
+        const flareAnimation = document.getElementById('flare-animation');
+
+        let timeLeft = 90; // 1.5 minutes
+        let hits = 0;
+        let targetHits = 25;
+        let gameInterval;
+        let debrisInterval;
+        let timerInterval;
+
+        function startGame() {
+            hits = 0;
+            timeLeft = 90;
+            messageElement.textContent = `Hits: ${hits} / ${targetHits}`;
+            timerElement.textContent = `Time: ${timeLeft} seconds`;
+            startBtn.style.display = 'none';
+            gameContainer.innerHTML = '';
+            winScreen.style.display = 'none';
+            failScreen.style.display = 'none';
+            flareAnimation.style.display = 'none';
+
+            timerInterval = setInterval(updateTimer, 1000);
+            debrisInterval = setInterval(createDebris, 500); // New debris every 0.5 seconds
+        }
+
+        function updateTimer() {
+            timeLeft--;
+            timerElement.textContent = `Time: ${timeLeft} seconds`;
+            if (timeLeft <= 0) {
+                endGame(false);
+            }
+        }
+
+        function createDebris() {
+            const debris = document.createElement('div');
+            debris.classList.add('debris');
+            debris.style.left = `${Math.random() * (500 - 25)}px`;
+            debris.style.top = `${Math.random() * (400 - 25)}px`;
+
+            debris.addEventListener('click', () => {
+                debris.remove();
+                hits++;
+                messageElement.textContent = `Hits: ${hits} / ${targetHits}`;
+                if (hits >= targetHits) {
+                    endGame(true);
+                }
+            });
+
+            // Remove debris after 0.8 seconds if not clicked
+            setTimeout(() => {
+                if (debris.parentNode) {
+                    debris.remove();
+                }
+            }, 800);
+
+            gameContainer.appendChild(debris);
+        }
+
+        function endGame(success) {
+            clearInterval(timerInterval);
+            clearInterval(debrisInterval);
+            gameContainer.innerHTML = '';
+            startBtn.style.display = 'block';
+            if (success) {
+                winScreen.style.display = 'block';
+                flareAnimation.style.display = 'flex';
+                setTimeout(() => {
+                    flareAnimation.style.display = 'none';
+                }, 2000); // Hide flare animation after 2 seconds
+            } else {
+                failScreen.style.display = 'block';
+            }
+        }
+
+        startBtn.addEventListener('click', startGame);
+        retryButtons.forEach(btn => btn.addEventListener('click', startGame));
+    </script>
+</body>
+</html>
