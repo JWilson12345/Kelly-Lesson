@@ -271,6 +271,10 @@
         const spawnIntervalTime = 3000; // Spawn a bomb every 3 seconds
         const maxBombs = 5;
 
+        // Swipe controls variables
+        let touchStartX = 0;
+        let touchStartY = 0;
+
         // Spawn a single bomb on the opposite side
         function spawnBomb() {
             if (obstacles.length >= maxBombs) return;
@@ -387,6 +391,30 @@
             if (e.key === 'ArrowDown' && gameActive) setDirection('down');
             if (e.key === 'ArrowLeft' && gameActive) setDirection('left');
             if (e.key === 'ArrowRight' && gameActive) setDirection('right');
+        });
+
+        // Swipe controls for mobile
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault(); // Prevent scrolling
+            touchStartX = e.touches[0].clientX;
+            touchStartY = e.touches[0].clientY;
+        });
+
+        canvas.addEventListener('touchend', (e) => {
+            if (!gameActive) return;
+            const touchEndX = e.changedTouches[0].clientX;
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaX = touchEndX - touchStartX;
+            const deltaY = touchEndY - touchStartY;
+            const threshold = 50; // Minimum swipe distance
+
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+                if (deltaX > 0) setDirection('right');
+                else setDirection('left');
+            } else if (Math.abs(deltaY) > threshold) {
+                if (deltaY > 0) setDirection('down');
+                else setDirection('up');
+            }
         });
 
         // Game over
