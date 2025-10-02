@@ -413,9 +413,9 @@
         // Restart game
         function restartGame() {
             snake = [
-                { x: 10, y: 10 }, // Head
-                { x: 9, y: 10 },  // Body segment 1
-                { x: 8, y: 10 }   // Body segment 2
+                { x: 5, y: 10 }, // Head
+                { x: 4, y: 10 },  // Body segment 1
+                { x: 3, y: 10 }   // Body segment 2
             ];
             direction = 'right';
             itemsCollected = 0;
@@ -435,9 +435,9 @@
         function startGame() {
             document.getElementById('startScreen').style.display = 'none';
             snake = [
-                { x: 10, y: 10 }, // Head
-                { x: 9, y: 10 },  // Body segment 1
-                { x: 8, y: 10 }   // Body segment 2
+                { x: 5, y: 10 }, // Head
+                { x: 4, y: 10 },  // Body segment 1
+                { x: 3, y: 10 }   // Body segment 2
             ];
             generateItem();
             gameActive = true;
