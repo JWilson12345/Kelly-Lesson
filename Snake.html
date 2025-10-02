@@ -197,7 +197,7 @@
         <div class="story-text">
             The plane's down! Scavenge the wreckage for tools and clues to signal the military base!
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <canvas id="gameCanvas" width="350" height="400"></canvas>
         <div class="game-over" id="gameOver">
             <h2>Lost on the Island! Items: <span id="finalItems">0</span></h2>
             <button onclick="restartGame()">Try Again</button>
@@ -229,15 +229,15 @@
         let bombsSpawned = false;
         let spawnTimer;
         const itemEmojis = ['🧰', '📻', '🔑', '🔋', '🛡️', '🗝️', '🧪', '📡'];
-        const bombLifetime = 15000; // 15 seconds
+        const bombLifetime = 12000; // 15 seconds
         const spawnIntervalTime = 3000; // Spawn a bomb every 3 seconds
         const maxBombs = 5;
 
         // Adjust for device pixel ratio
         const dpr = window.devicePixelRatio || 1;
-        canvas.width = 400 * dpr;
+        canvas.width = 300 * dpr;
         canvas.height = 400 * dpr;
-        canvas.style.width = '400px';
+        canvas.style.width = '300px';
         canvas.style.height = '400px';
         ctx.scale(dpr, dpr);
 
