@@ -296,54 +296,57 @@
 
         // Update game state
         function update() {
-            if (!gameActive) return;
+    if (!gameActive) return;
 
-            obstacles = obstacles.filter(ob => Date.now() - ob.createdAt < bombLifetime);
+    obstacles = obstacles.filter(ob => Date.now() - ob.createdAt < bombLifetime);
 
-            let head = { x: snake[0].x, y: snake[0].y };
-            if (direction === 'up') head.y--;
-            if (direction === 'down') head.y++;
-            if (direction === 'left') head.x--;
-            if (direction === 'right') head.x++;
+    let head = { x: snake[0].x, y: snake[0].y };
+    if (direction === 'up') head.y--;
+    if (direction === 'down') head.y++;
+    if (direction === 'left') head.x--;
+    if (direction === 'right') head.x++;
 
-            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
-                gameOver();
-                return;
-            }
+    // Calculate exact boundary using canvas dimensions and gridSize
+    const maxX = canvas.width / dpr / gridSize; // 200 / 1 / 20 = 10
+    const maxY = canvas.height / dpr / gridSize; // 200 / 1 / 20 = 10
+    if (head.x < 0 || head.x >= maxX || head.y < 0 || head.y >= maxY) {
+        gameOver();
+        return;
+    }
 
-            if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-                gameOver();
-                return;
-            }
+    if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+        gameOver();
+        return;
+    }
 
-            if (obstacles.some(ob => ob.x === head.x && ob.y === head.y)) {
-                gameOver();
-                return;
-            }
+    if (obstacles.some(ob => ob.x === head.x && ob.y === head.y)) {
+        gameOver();
+        return;
+    }
 
-            snake.unshift(head);
+    snake.unshift(head);
 
-            if (head.x === item.x && head.y === item.y) {
-                itemsCollected++;
-                document.getElementById('items').textContent = itemsCollected;
-                generateItem();
-                if (itemsCollected === 5 && !bombsSpawned) {
-                    bombsSpawned = true;
-                    spawnBomb();
-                    spawnTimer = setInterval(spawnBomb, spawnIntervalTime);
-                }
-                if (itemsCollected >= 20) {
-                    gameActive = false;
-                    clearInterval(gameLoop);
-                    if (spawnTimer) clearInterval(spawnTimer);
-                    document.getElementById('congratsPopup').style.display = 'block';
-                }
-            } else {
-                snake.pop();
-            }
-
-            draw();
+    if (head.x === item.x && head.y === item.y) {
+        itemsCollected++;
+        document.getElementById('items').textContent = itemsCollected;
+        generateItem();
+        if (itemsCollected === 5 && !bombsSpawned) {
+            bombsSpawned = true;
+            spawnBomb();
+            spawnTimer = setInterval(spawnBomb, spawnIntervalTime);
         }
+        if (itemsCollected >= 20) {
+            gameActive = false;
+            clearInterval(gameLoop);
+            if (spawnTimer) clearInterval(spawnTimer);
+            document.getElementById('congratsPopup').style.display = 'block';
+        }
+    } else {
+        snake.pop();
+    }
+
+    draw();
+}
 
         // Handle direction input
         function setDirection(newDirection) {
