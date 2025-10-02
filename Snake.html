@@ -360,7 +360,7 @@
                     spawnBomb();
                     spawnTimer = setInterval(spawnBomb, spawnIntervalTime);
                 }
-                if (itemsCollected >= 20) {
+                if (itemsCollected >= 15) {
                     gameActive = false;
                     clearInterval(gameLoop);
                     if (spawnTimer) clearInterval(spawnTimer);
