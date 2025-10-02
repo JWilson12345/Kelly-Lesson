@@ -215,240 +215,230 @@
     </div>
 
     <script>
-        const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
-        const gridSize = 20;
-        const tileCount = canvas.width / gridSize;
-        let snake = [];
-        let item = {};
-        let obstacles = [];
-        let direction = 'right';
-        let itemsCollected = 0;
-        let gameActive = false;
-        let gameLoop;
-        let bombsSpawned = false;
-        let spawnTimer;
-        const itemEmojis = ['🧰', '📻', '🔑', '🔋', '🛡️', '🗝️', '🧪', '📡'];
-        const bombLifetime = 12000; // 15 seconds
-        const spawnIntervalTime = 3000; // Spawn a bomb every 3 seconds
-        const maxBombs = 5;
+    const canvas = document.getElementById('gameCanvas');
+    const ctx = canvas.getContext('2d');
+    const gridSize = 20;
+    const canvasLogicalWidth = 300;
+    const canvasLogicalHeight = 400;
+    const tileCountX = canvasLogicalWidth / gridSize;
+    const tileCountY = canvasLogicalHeight / gridSize;
+    let snake = [];
+    let item = {};
+    let obstacles = [];
+    let direction = 'right';
+    let itemsCollected = 0;
+    let gameActive = false;
+    let gameLoop;
+    let bombsSpawned = false;
+    let spawnTimer;
+    let emojiIndex = 0;
+    const itemEmojis = ['🧰', '📻', '🔑', '🔋', '🛡️', '🗝️', '🧪', '📡'];
+    const bombLifetime = 12000;
+    const spawnIntervalTime = 3000;
+    const maxBombs = 5;
 
-        // Adjust for device pixel ratio
-        const dpr = window.devicePixelRatio || 1;
-        canvas.width = 300 * dpr;
-        canvas.height = 400 * dpr;
-        canvas.style.width = '300px';
-        canvas.style.height = '400px';
-        ctx.scale(dpr, dpr);
+    const dpr = window.devicePixelRatio || 1;
+    canvas.width = canvasLogicalWidth * dpr;
+    canvas.height = canvasLogicalHeight * dpr;
+    canvas.style.width = `${canvasLogicalWidth}px`;
+    canvas.style.height = `${canvasLogicalHeight}px`;
+    ctx.scale(dpr, dpr);
 
-        // Swipe controls variables
-        let touchStartX = 0;
-        let touchStartY = 0;
-        let lastDirectionChange = 0;
-        const debounceTime = 100; // Prevent rapid direction changes (ms)
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let lastDirectionChange = 0;
+    const debounceTime = 100;
 
-        // Spawn a single bomb on the opposite side
-        function spawnBomb() {
-            if (obstacles.length >= maxBombs) return;
-            const head = snake[0];
-            const halfGrid = Math.floor(tileCount / 2);
-            const xRange = head.x < halfGrid ? [halfGrid, tileCount - 1] : [0, halfGrid - 1];
-            const yRange = head.y < halfGrid ? [halfGrid, tileCount - 1] : [0, halfGrid - 1];
-            let obX, obY;
-            do {
-                obX = Math.floor(Math.random() * (xRange[1] - xRange[0] + 1)) + xRange[0];
-                obY = Math.floor(Math.random() * (yRange[1] - yRange[0] + 1)) + yRange[0];
-            } while (
-                snake.some(segment => segment.x === obX && segment.y === obY) ||
-                obstacles.some(ob => ob.x === obX && ob.y === obY) ||
-                (item.x === obX && item.y === obY)
-            );
-            obstacles.push({ x: obX, y: obY, createdAt: Date.now() });
-        }
-
-        // Generate new item position with random emoji
-        function generateItem() {
-            item = {
-                x: Math.floor(Math.random() * tileCount),
-                y: Math.floor(Math.random() * tileCount),
-                emoji: itemEmojis[Math.floor(Math.random() * itemEmojis.length)]
-            };
-            if (snake.some(segment => segment.x === item.x && segment.y === item.y) ||
-                obstacles.some(ob => ob.x === item.x && ob.y === item.y)) {
-                generateItem();
-            }
-        }
-
-        // Draw game elements with emojis
-        function draw() {
-            ctx.fillStyle = '#F4A460';
-            ctx.fillRect(0, 0, canvas.width / dpr, canvas.height / dpr);
-            ctx.font = `${gridSize}px Arial`;
-            ctx.fillText('🐍', snake[0].x * gridSize, snake[0].y * gridSize + gridSize);
-            for (let i = 1; i < snake.length; i++) {
-                ctx.fillText('🟢', snake[i].x * gridSize, snake[i].y * gridSize + gridSize);
-            }
-            ctx.fillText(item.emoji, item.x * gridSize, item.y * gridSize + gridSize);
-            obstacles.forEach(ob => {
-                ctx.fillText('💣', ob.x * gridSize, ob.y * gridSize + gridSize);
-            });
-        }
-
-        // Update game state
-        function update() {
-    if (!gameActive) return;
-
-    obstacles = obstacles.filter(ob => Date.now() - ob.createdAt < bombLifetime);
-
-    let head = { x: snake[0].x, y: snake[0].y };
-    if (direction === 'up') head.y--;
-    if (direction === 'down') head.y++;
-    if (direction === 'left') head.x--;
-    if (direction === 'right') head.x++;
-
-    // Calculate exact boundary using canvas dimensions and gridSize
-    const maxX = canvas.width / dpr / gridSize; // 200 / 1 / 20 = 10
-    const maxY = canvas.height / dpr / gridSize; // 200 / 1 / 20 = 10
-    if (head.x < 0 || head.x >= maxX || head.y < 0 || head.y >= maxY) {
-        gameOver();
-        return;
+    function spawnBomb() {
+        if (obstacles.length >= maxBombs) return;
+        const head = snake[0];
+        const halfGridX = Math.floor(tileCountX / 2);
+        const halfGridY = Math.floor(tileCountY / 2);
+        const xRange = head.x < halfGridX ? [halfGridX, tileCountX - 1] : [0, halfGridX - 1];
+        const yRange = head.y < halfGridY ? [halfGridY, tileCountY - 1] : [0, halfGridY - 1];
+        let obX, obY;
+        do {
+            obX = Math.floor(Math.random() * (xRange[1] - xRange[0] + 1)) + xRange[0];
+            obY = Math.floor(Math.random() * (yRange[1] - yRange[0] + 1)) + yRange[0];
+        } while (
+            snake.some(segment => segment.x === obX && segment.y === obY) ||
+            obstacles.some(ob => ob.x === obX && ob.y === obY) ||
+            (item.x === obX && item.y === obY)
+        );
+        obstacles.push({ x: obX, y: obY, createdAt: Date.now() });
     }
 
-    if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-        gameOver();
-        return;
+    function generateItem() {
+        item = {
+            x: Math.floor(Math.random() * tileCountX),
+            y: Math.floor(Math.random() * tileCountY),
+            emoji: itemEmojis[emojiIndex]
+        };
+        emojiIndex = (emojiIndex + 1) % itemEmojis.length;
+        if (snake.some(segment => segment.x === item.x && segment.y === item.y) ||
+            obstacles.some(ob => ob.x === item.x && ob.y === ob.y)) {
+            generateItem();
+        }
     }
 
-    if (obstacles.some(ob => ob.x === head.x && ob.y === head.y)) {
-        gameOver();
-        return;
-    }
-
-    snake.unshift(head);
-
-    if (head.x === item.x && head.y === item.y) {
-        itemsCollected++;
-        document.getElementById('items').textContent = itemsCollected;
-        generateItem();
-        if (itemsCollected === 5 && !bombsSpawned) {
-            bombsSpawned = true;
-            spawnBomb();
-            spawnTimer = setInterval(spawnBomb, spawnIntervalTime);
+    function draw() {
+        ctx.fillStyle = '#F4A460';
+        ctx.fillRect(0, 0, canvasLogicalWidth, canvasLogicalHeight);
+        ctx.font = `${gridSize}px Arial`;
+        ctx.fillText('🐍', snake[0].x * gridSize, snake[0].y * gridSize + gridSize);
+        for (let i = 1; i < snake.length; i++) {
+            ctx.fillText('🟢', snake[i].x * gridSize, snake[i].y * gridSize + gridSize);
         }
-        if (itemsCollected >= 20) {
-            gameActive = false;
-            clearInterval(gameLoop);
-            if (spawnTimer) clearInterval(spawnTimer);
-            document.getElementById('congratsPopup').style.display = 'block';
-        }
-    } else {
-        snake.pop();
-    }
-
-    draw();
-}
-
-        // Handle direction input
-        function setDirection(newDirection) {
-            const now = Date.now();
-            if (now - lastDirectionChange < debounceTime) return;
-            if (
-                (newDirection === 'up' && direction !== 'down') ||
-                (newDirection === 'down' && direction !== 'up') ||
-                (newDirection === 'left' && direction !== 'right') ||
-                (newDirection === 'right' && direction !== 'left')
-            ) {
-                direction = newDirection;
-                lastDirectionChange = now;
-            }
-        }
-
-        // Keyboard controls
-        document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowUp' && gameActive) setDirection('up');
-            if (e.key === 'ArrowDown' && gameActive) setDirection('down');
-            if (e.key === 'ArrowLeft' && gameActive) setDirection('left');
-            if (e.key === 'ArrowRight' && gameActive) setDirection('right');
+        ctx.fillText(item.emoji, item.x * gridSize, item.y * gridSize + gridSize);
+        obstacles.forEach(ob => {
+            ctx.fillText('💣', ob.x * gridSize, ob.y * gridSize + gridSize);
         });
+    }
 
-        // Swipe controls for mobile
-        canvas.addEventListener('touchstart', (e) => {
-            e.preventDefault(); // Prevent scrolling
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
+    function update() {
+        if (!gameActive) return;
 
-        canvas.addEventListener('touchmove', (e) => {
-            if (!gameActive) return;
-            const touchX = e.touches[0].clientX;
-            const touchY = e.touches[0].clientY;
-            const deltaX = touchX - touchStartX;
-            const deltaY = touchY - touchStartY;
-            const threshold = 30; // Lowered threshold for faster response
+        obstacles = obstacles.filter(ob => Date.now() - ob.createdAt < bombLifetime);
 
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
-                if (deltaX > 0) setDirection('right');
-                else setDirection('left');
-                touchStartX = touchX; // Reset to prevent continuous triggering
-                touchStartY = touchY;
-            } else if (Math.abs(deltaY) > threshold) {
-                if (deltaY > 0) setDirection('down');
-                else setDirection('up');
-                touchStartX = touchX;
-                touchStartY = touchY;
-            }
-        });
+        let head = { x: snake[0].x, y: snake[0].y };
+        if (direction === 'up') head.y--;
+        if (direction === 'down') head.y++;
+        if (direction === 'left') head.x--;
+        if (direction === 'right') head.x++;
 
-        // Game over
-        function gameOver() {
-            document.getElementById('finalItems').textContent = itemsCollected;
-            document.getElementById('gameOver').style.display = 'flex';
-            gameActive = false;
-            clearInterval(gameLoop);
-            if (spawnTimer) clearInterval(spawnTimer);
+        if (head.x < 0 || head.x >= tileCountX || head.y < 0 || head.y >= tileCountY) {
+            gameOver();
+            return;
         }
 
-        // Proceed to dialog
-        function nextStage() {
-            window.location.href = 'CharacterDialog.html';
+        if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
+            gameOver();
+            return;
         }
 
-        // Restart game
-        function restartGame() {
-            snake = [
-                { x: 5, y: 10 }, // Head
-                { x: 4, y: 10 },  // Body segment 1
-                { x: 3, y: 10 }   // Body segment 2
-            ];
-            direction = 'right';
-            itemsCollected = 0;
-            bombsSpawned = false;
-            obstacles = [];
-            if (spawnTimer) clearInterval(spawnTimer);
+        if (obstacles.some(ob => ob.x === head.x && ob.y === head.y)) {
+            gameOver();
+            return;
+        }
+
+        snake.unshift(head);
+
+        if (head.x === item.x && head.y === item.y) {
+            itemsCollected++;
             document.getElementById('items').textContent = itemsCollected;
-            document.getElementById('finalItems').textContent = itemsCollected;
-            document.getElementById('gameOver').style.display = 'none';
-            document.getElementById('congratsPopup').style.display = 'none';
-            gameActive = true;
             generateItem();
-            gameLoop = setInterval(update, 100); // Original 10 FPS
+            if (itemsCollected === 5 && !bombsSpawned) {
+                bombsSpawned = true;
+                spawnBomb();
+                spawnTimer = setInterval(spawnBomb, spawnIntervalTime);
+            }
+            if (itemsCollected >= 15) {
+                gameActive = false;
+                clearInterval(gameLoop);
+                if (spawnTimer) clearInterval(spawnTimer);
+                document.getElementById('congratsPopup').style.display = 'block';
+            }
+        } else {
+            snake.pop();
         }
 
-        // Start the game
-        function startGame() {
-            document.getElementById('startScreen').style.display = 'none';
-            snake = [
-                { x: 5, y: 10 }, // Head
-                { x: 4, y: 10 },  // Body segment 1
-                { x: 3, y: 10 }   // Body segment 2
-            ];
-            generateItem();
-            gameActive = true;
-            gameLoop = setInterval(update, 100); // Original 10 FPS
-        }
+        draw();
+    }
 
-        // Initialize start screen
-        document.getElementById('startScreen').style.display = 'flex';
-    </script>
+    function setDirection(newDirection) {
+        const now = Date.now();
+        if (now - lastDirectionChange < debounceTime) return;
+        if (
+            (newDirection === 'up' && direction !== 'down') ||
+            (newDirection === 'down' && direction !== 'up') ||
+            (newDirection === 'left' && direction !== 'right') ||
+            (newDirection === 'right' && direction !== 'left')
+        ) {
+            direction = newDirection;
+            lastDirectionChange = now;
+        }
+    }
+
+    document.addEventListener('keydown', (e) => {
+        if (e.key === 'ArrowUp' && gameActive) setDirection('up');
+        if (e.key === 'ArrowDown' && gameActive) setDirection('down');
+        if (e.key === 'ArrowLeft' && gameActive) setDirection('left');
+        if (e.key === 'ArrowRight' && gameActive) setDirection('right');
+    });
+
+    canvas.addEventListener('touchstart', (e) => {
+        e.preventDefault();
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+    });
+
+    canvas.addEventListener('touchmove', (e) => {
+        if (!gameActive) return;
+        const touchX = e.touches[0].clientX;
+        const touchY = e.touches[0].clientY;
+        const deltaX = touchX - touchStartX;
+        const deltaY = touchY - touchStartY;
+        const threshold = 30;
+        if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > threshold) {
+            if (deltaX > 0) setDirection('right');
+            else setDirection('left');
+            touchStartX = touchX;
+            touchStartY = touchY;
+        } else if (Math.abs(deltaY) > threshold) {
+            if (deltaY > 0) setDirection('down');
+            else setDirection('up');
+            touchStartX = touchX;
+            touchStartY = touchY;
+        }
+    });
+
+    function gameOver() {
+        document.getElementById('finalItems').textContent = itemsCollected;
+        document.getElementById('gameOver').style.display = 'flex';
+        gameActive = false;
+        clearInterval(gameLoop);
+        if (spawnTimer) clearInterval(spawnTimer);
+    }
+
+    function nextStage() {
+        window.location.href = 'CharacterDialog.html';
+    }
+
+    function restartGame() {
+        snake = [
+            { x: 5, y: 10 },
+            { x: 4, y: 10 },
+            { x: 3, y: 10 }
+        ];
+        direction = 'right';
+        itemsCollected = 0;
+        bombsSpawned = false;
+        obstacles = [];
+        emojiIndex = 0;
+        if (spawnTimer) clearInterval(spawnTimer);
+        document.getElementById('items').textContent = itemsCollected;
+        document.getElementById('finalItems').textContent = itemsCollected;
+        document.getElementById('gameOver').style.display = 'none';
+        document.getElementById('congratsPopup').style.display = 'none';
+        gameActive = true;
+        generateItem();
+        gameLoop = setInterval(update, 100);
+    }
+
+    function startGame() {
+        document.getElementById('startScreen').style.display = 'none';
+        snake = [
+            { x: 5, y: 10 },
+            { x: 4, y: 10 },
+            { x: 3, y: 10 }
+        ];
+        emojiIndex = 0;
+        generateItem();
+        gameActive = true;
+        gameLoop = setInterval(update, 100);
+    }
+
+    document.getElementById('startScreen').style.display = 'flex';
+</script>
 </body>
 </html>
