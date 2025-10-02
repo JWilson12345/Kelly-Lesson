@@ -1,387 +1,445 @@
-<script type="text/javascript">
-        var gk_isXlsx = false;
-        var gk_xlsxFileLookup = {};
-        var gk_fileData = {};
-        function filledCell(cell) {
-          return cell !== '' && cell != null;
-        }
-        function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-
-                // Convert sheet to JSON to filter blank rows
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                // Filter out blank rows (rows where all cells are empty, null, or undefined)
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-
-                // Heuristic to find the header row by ignoring rows with fewer filled cells than the next row
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                // Fallback
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
-                }
-
-                // Convert filtered JSON back to CSV
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex)); // Create a new sheet from filtered array of arrays
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
-            }
-        }
-        return gk_fileData[filename] || "";
-        }
-        </script><!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Deserted Island Snake</title>
+    <title>Snake: Island Scavenger</title>
     <style>
         body {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            height: 100vh;
             margin: 0;
-            background-color: #D2B48C; /* Sandy background */
-            font-family: Arial, sans-serif;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #87CEEB, #FFD700); /* Sky to sandy beach gradient */
+            font-family: 'Arial', sans-serif;
+            color: #333;
+            overflow: hidden;
         }
+
+        .game-container {
+            background: url('https://www.transparenttextures.com/patterns/sand.png'); /* Sandy texture */
+            border: 5px solid #8B4513; /* Wooden crate border */
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+            text-align: center;
+            width: 600px;
+            max-width: 90%;
+        }
+
+        h1 {
+            font-size: 2em;
+            color: #FF4500; /* Fiery orange for urgency */
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 0 0 10px;
+        }
+
+        .inventory {
+            font-size: 1.2em;
+            color: #228B22; /* Jungle green for items */
+            background: rgba(255, 255, 255, 0.8);
+            padding: 10px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+
         canvas {
-            border: 2px solid #2E7D32; /* Jungle green border */
-            background-color: #F4E4BC; /* Sandy beige */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-            touch-action: none;
+            border: 3px solid #4682B4; /* Ocean blue border */
+            background: #F4A460; /* Sandy game area */
+            border-radius: 5px;
         }
-        #score {
-            font-size: 24px;
+
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
             margin: 10px 0;
-            color: #2E7D32; /* Jungle green text */
         }
-        #controls {
-            display: none;
-            margin-top: 10px;
-        }
-        #controls button {
-            width: 60px;
-            height: 60px;
-            margin: 5px;
-            font-size: 20px;
-            background-color: #FF6F61; /* Coral button */
+
+        .control-btn {
+            background: #228B22; /* Jungle green */
             color: white;
             border: none;
-            border-radius: 50%;
+            padding: 10px;
+            font-size: 1em;
+            border-radius: 5px;
             cursor: pointer;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            transition: background 0.3s;
         }
-        #controls button:active {
-            background-color: #E55A50; /* Darker coral */
+
+        .control-btn:hover {
+            background: #006400; /* Darker green on hover */
         }
-        #gameOverPopup, #winPopup {
+
+        .control-btn:disabled {
+            background: #808080;
+            cursor: not-allowed;
+        }
+
+        .story-text {
+            background: rgba(255, 245, 238, 0.9); /* Parchment-like note */
+            padding: 15px;
+            border: 2px solid #8B4513;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            color: #333;
+            font-size: 0.9em;
+        }
+
+        .game-over {
+            display: none;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border-radius: 10px;
+        }
+
+        .game-over h2 {
+            font-size: 2em;
+            margin: 0;
+        }
+
+        .game-over button {
+            background: #FF4500;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            font-size: 1.2em;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+
+        .game-over button:hover {
+            background: #CC3700;
+        }
+
+        .congrats-popup {
             display: none;
             position: fixed;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
+            background: rgba(255, 245, 238, 0.9); /* Parchment-like, matches story-text */
+            border: 2px solid #8B4513;
+            border-radius: 5px;
             padding: 20px;
-            border-radius: 10px;
             text-align: center;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
             z-index: 1000;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+            font-style: italic;
+            color: #333;
+            font-size: 1em;
         }
-        #gameOverPopup p, #winPopup p {
-            font-size: 24px;
-            margin: 10px 0;
-        }
-        #gameOverPopup button, #winPopup button {
-            padding: 10px 20px;
-            font-size: 18px;
-            background-color: #FF6F61; /* Coral button */
+
+        .congrats-popup button {
+            background: #228B22; /* Jungle green */
             color: white;
             border: none;
+            padding: 10px 20px;
+            font-size: 1em;
             border-radius: 5px;
             cursor: pointer;
+            margin-top: 10px;
+            transition: background 0.3s;
         }
-        #gameOverPopup button:hover, #winPopup button:hover {
-            background-color: #E55A50; /* Darker coral */
+
+        .congrats-popup button:hover {
+            background: #006400;
         }
+
+        .start-screen {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+        }
+
+        .start-button {
+            background: #228B22;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 1.5em;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 20px;
+        }
+
+        .start-button:hover {
+            background: #006400;
+        }
+
         @media (max-width: 600px) {
-            #controls { display: grid; grid-template-columns: repeat(3, 1fr); }
-            #controls .empty { visibility: hidden; }
-            #score { font-size: 18px; }
-            #gameOverPopup p, #winPopup p { font-size: 18px; }
-            #gameOverPopup button, #winPopup button { font-size: 16px; padding: 8px 16px; }
+            .game-container {
+                padding: 10px;
+            }
+
+            h1 {
+                font-size: 1.5em;
+            }
+
+            canvas {
+                width: 100%;
+                height: auto;
+            }
+
+            .control-btn {
+                padding: 8px;
+                font-size: 0.9em;
+            }
+
+            .congrats-popup {
+                width: 80%;
+                padding: 15px;
+                font-size: 0.9em;
+            }
+
+            .start-button {
+                padding: 10px 20px;
+                font-size: 1.2em;
+            }
         }
     </style>
 </head>
 <body>
-    <div id="score">Items Collected: 0</div>
-    <canvas id="gameCanvas"></canvas>
-    <div id="controls">
-        <div class="empty"></div>
-        <button id="up">↑</button>
-        <div class="empty"></div>
-        <button id="left">←</button>
-        <div class="empty"></div>
-        <button id="right">→</button>
-        <div class="empty"></div>
-        <button id="down">↓</button>
-        <div class="empty"></div>
-    </div>
-    <div id="gameOverPopup">
-        <p id="gameOverScore">Lost on the Island! Items: 0</p>
-        <button id="restartButton">Try Again</button>
-    </div>
-    <div id="winPopup">
-        <p id="winMessage">You Survived the Crash! Collected 15 Items!<br>Code: <span id="winCode"></span></p>
-        <button id="winRestartButton">Play Again</button>
+    <div class="game-container">
+        <h1>Lost on the Island!</h1>
+        <div class="inventory">Items Collected: <span id="items">0</span></div>
+        <div class="story-text">
+            The plane's down! Scavenge the wreckage for tools and clues to signal the military base!
+        </div>
+        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <div class="controls" id="controls" style="display: none;">
+            <button class="control-btn" onclick="setDirection('up')">↑</button>
+            <button class="control-btn" onclick="setDirection('left')">←</button>
+            <button class="control-btn" onclick="setDirection('right')">→</button>
+            <button class="control-btn" onclick="setDirection('down')">↓</button>
+        </div>
+        <div class="game-over" id="gameOver">
+            <h2>Lost on the Island! Items: <span id="finalItems">0</span></h2>
+            <button onclick="restartGame()">Try Again</button>
+        </div>
+        <div class="congrats-popup" id="congratsPopup">
+            <p>Congratulations! You scavenged enough resources to move forward!</p>
+            <button onclick="nextStage()">OK</button>
+        </div>
+        <div class="start-screen" id="startScreen">
+            <div class="story-text">
+                Prepare to scavenge the wreckage!
+            </div>
+            <button class="start-button" onclick="startGame()">Start</button>
+        </div>
     </div>
 
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
-        const gridCount = 20;
-        let gridSize;
-        let snake;
-        let direction;
-        let nextDirection;
-        let foods;
-        let score;
-        let gameOver;
-        let availableEmojis;
-        const emojiPool = ['🧳', '🔑', '🔒', '📻', '🛠️', '🧰', '🛩️', '📦', '🧪', '🧴', '🛡️', '🪓', '🗝️', '🔨', '🧵'];
+        const gridSize = 20;
+        const tileCount = canvas.width / gridSize;
+        let snake = [];
+        let item = {};
+        let obstacles = [];
+        let direction = 'right';
+        let itemsCollected = 0;
+        let gameActive = false;
+        let gameLoop;
+        let bombsSpawned = false;
+        let spawnTimer;
+        const itemEmojis = ['🧰', '📻', '🔑', '🔋', '🛡️', '🗝️', '🧪', '📡'];
+        const bombLifetime = 15000; // 15 seconds
+        const spawnIntervalTime = 3000; // Spawn a bomb every 3 seconds
+        const maxBombs = 5;
 
-        // Colors
-        const headColor = '#000000';
-        const tailColors = ['#FF6F61', '#26A69A']; // Coral and teal
-
-        // Generate random code
-        function generateCode() {
-            const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-            let code = '';
-            for (let i = 0; i < 6; i++) {
-                code += chars.charAt(Math.floor(Math.random() * chars.length));
-            }
-            return code;
-        }
-
-        // Set canvas size
-        function resizeCanvas() {
-            const size = Math.min(window.innerWidth, window.innerHeight) * 0.8;
-            canvas.width = Math.floor(size / gridCount) * gridCount;
-            canvas.height = canvas.width;
-            gridSize = canvas.width / gridCount;
-            resetGame();
-        }
-        resizeCanvas();
-        window.addEventListener('resize', resizeCanvas);
-
-        // Reset game state
-        function resetGame() {
-            snake = [
-                { x: 10 * gridSize, y: 10 * gridSize },
-                { x: 9 * gridSize, y: 10 * gridSize },
-                { x: 8 * gridSize, y: 10 * gridSize }
-            ];
-            direction = 'right';
-            nextDirection = 'right';
-            foods = [];
-            availableEmojis = [...emojiPool];
-            for (let i = 0; i < 3; i++) {
-                spawnFood();
-            }
-            score = 0;
-            gameOver = false;
-            document.getElementById('score').textContent = 'Items Collected: 0';
-            document.getElementById('gameOverPopup').style.display = 'none';
-            document.getElementById('winPopup').style.display = 'none';
-        }
-
-        // Spawn a new food item
-        function spawnFood() {
-            if (availableEmojis.length === 0) {
-                availableEmojis = [...emojiPool]; // Reset if exhausted
-            }
-            const emojiIndex = Math.floor(Math.random() * availableEmojis.length);
-            const emoji = availableEmojis.splice(emojiIndex, 1)[0];
-            let newFood;
+        // Spawn a single bomb on the opposite side
+        function spawnBomb() {
+            if (obstacles.length >= maxBombs) return;
+            const head = snake[0];
+            const halfGrid = Math.floor(tileCount / 2);
+            const xRange = head.x < halfGrid ? [halfGrid, tileCount - 1] : [0, halfGrid - 1];
+            const yRange = head.y < halfGrid ? [halfGrid, tileCount - 1] : [0, halfGrid - 1];
+            let obX, obY;
             do {
-                newFood = {
-                    x: Math.floor(Math.random() * gridCount) * gridSize,
-                    y: Math.floor(Math.random() * gridCount) * gridSize,
-                    emoji: emoji
-                };
+                obX = Math.floor(Math.random() * (xRange[1] - xRange[0] + 1)) + xRange[0];
+                obY = Math.floor(Math.random() * (yRange[1] - yRange[0] + 1)) + yRange[0];
             } while (
-                snake.some(segment => segment.x === newFood.x && segment.y === newFood.y) ||
-                foods.some(food => food.x === newFood.x && food.y === newFood.y)
+                snake.some(segment => segment.x === obX && segment.y === obY) ||
+                obstacles.some(ob => ob.x === obX && ob.y === obY) ||
+                (item.x === obX && item.y === obY)
             );
-            foods.push(newFood);
+            obstacles.push({ x: obX, y: obY, createdAt: Date.now() });
         }
 
-        // Draw grid
-        function drawGrid() {
-            ctx.strokeStyle = '#4A90E2'; // Ocean blue grid
-            for (let i = 0; i <= canvas.width; i += gridSize) {
-                ctx.beginPath();
-                ctx.moveTo(i, 0);
-                ctx.lineTo(i, canvas.height);
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(0, i);
-                ctx.lineTo(canvas.width, i);
-                ctx.stroke();
+        // Generate new item position with random emoji
+        function generateItem() {
+            item = {
+                x: Math.floor(Math.random() * tileCount),
+                y: Math.floor(Math.random() * tileCount),
+                emoji: itemEmojis[Math.floor(Math.random() * itemEmojis.length)]
+            };
+            if (snake.some(segment => segment.x === item.x && segment.y === item.y) ||
+                obstacles.some(ob => ob.x === item.x && ob.y === item.y)) {
+                generateItem();
             }
         }
 
-        // Draw snake
-        function drawSnake() {
-            snake.forEach((segment, index) => {
-                ctx.fillStyle = index === 0 ? headColor : tailColors[index % tailColors.length];
-                ctx.beginPath();
-                ctx.roundRect(segment.x + 2, segment.y + 2, gridSize - 4, gridSize - 4, 4);
-                ctx.fill();
-                ctx.strokeStyle = '#2E7D32'; // Jungle green outline
-                ctx.lineWidth = 1;
-                ctx.stroke();
-            });
-        }
-
-        // Draw foods
-        function drawFoods() {
-            ctx.font = `${gridSize * 0.8}px Arial`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            foods.forEach(food => {
-                ctx.fillText(food.emoji, food.x + gridSize / 2, food.y + gridSize / 2);
+        // Draw game elements with emojis
+        function draw() {
+            ctx.fillStyle = '#F4A460';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.font = `${gridSize}px Arial`;
+            ctx.fillText('🐍', snake[0].x * gridSize, snake[0].y * gridSize + gridSize);
+            for (let i = 1; i < snake.length; i++) {
+                ctx.fillText('🟢', snake[i].x * gridSize, snake[i].y * gridSize + gridSize);
+            }
+            ctx.fillText(item.emoji, item.x * gridSize, item.y * gridSize + gridSize);
+            obstacles.forEach(ob => {
+                ctx.fillText('💣', ob.x * gridSize, ob.y * gridSize + gridSize);
             });
         }
 
         // Update game state
         function update() {
-            if (gameOver) return;
+            if (!gameActive) return;
 
-            direction = nextDirection;
-            const head = { x: snake[0].x, y: snake[0].y };
-            if (direction === 'right') head.x += gridSize;
-            if (direction === 'left') head.x -= gridSize;
-            if (direction === 'up') head.y -= gridSize;
-            if (direction === 'down') head.y += gridSize;
+            obstacles = obstacles.filter(ob => Date.now() - ob.createdAt < bombLifetime);
 
-            // Check wall collision
-            if (head.x < 0 || head.x >= canvas.width || head.y < 0 || head.y >= canvas.height) {
-                gameOver = true;
-                document.getElementById('gameOverScore').textContent = 'Lost on the Island! Items: ' + score;
-                document.getElementById('gameOverPopup').style.display = 'block';
+            let head = { x: snake[0].x, y: snake[0].y };
+            if (direction === 'up') head.y--;
+            if (direction === 'down') head.y++;
+            if (direction === 'left') head.x--;
+            if (direction === 'right') head.x++;
+
+            if (head.x < 0 || head.x >= tileCount || head.y < 0 || head.y >= tileCount) {
+                gameOver();
                 return;
             }
 
-            // Check self-collision
             if (snake.some(segment => segment.x === head.x && segment.y === head.y)) {
-                gameOver = true;
-                document.getElementById('gameOverScore').textContent = 'Lost on the Island! Items: ' + score;
-                document.getElementById('gameOverPopup').style.display = 'block';
+                gameOver();
+                return;
+            }
+
+            if (obstacles.some(ob => ob.x === head.x && ob.y === head.y)) {
+                gameOver();
                 return;
             }
 
             snake.unshift(head);
 
-            // Check food collision
-            let foodEatenIndex = -1;
-            for (let i = 0; i < foods.length; i++) {
-                if (head.x === foods[i].x && head.y === foods[i].y) {
-                    foodEatenIndex = i;
-                    break;
+            if (head.x === item.x && head.y === item.y) {
+                itemsCollected++;
+                document.getElementById('items').textContent = itemsCollected;
+                generateItem();
+                if (itemsCollected === 5 && !bombsSpawned) {
+                    bombsSpawned = true;
+                    spawnBomb();
+                    spawnTimer = setInterval(spawnBomb, spawnIntervalTime);
                 }
-            }
-            if (foodEatenIndex !== -1) {
-                score++;
-                document.getElementById('score').textContent = 'Items Collected: ' + score;
-                foods.splice(foodEatenIndex, 1);
-                spawnFood();
-                if (score >= 15) {
-                    gameOver = true;
-                    document.getElementById('winCode').textContent = generateCode();
-                    document.getElementById('winPopup').style.display = 'block';
-                    return;
+                if (itemsCollected >= 20) {
+                    gameActive = false;
+                    clearInterval(gameLoop);
+                    if (spawnTimer) clearInterval(spawnTimer);
+                    document.getElementById('congratsPopup').style.display = 'block';
                 }
             } else {
                 snake.pop();
             }
+
+            draw();
         }
 
-        // Render frame
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
-            drawGrid();
-            drawSnake();
-            drawFoods();
-        }
-
-        // Game loop
-        let lastTime = 0;
-        const fps = 10;
-        function gameLoop(timestamp) {
-            if (!gameOver && timestamp - lastTime > 1000 / fps) {
-                update();
-                draw();
-                lastTime = timestamp;
+        // Handle direction input
+        function setDirection(newDirection) {
+            if (
+                (newDirection === 'up' && direction !== 'down') ||
+                (newDirection === 'down' && direction !== 'up') ||
+                (newDirection === 'left' && direction !== 'right') ||
+                (newDirection === 'right' && direction !== 'left')
+            ) {
+                direction = newDirection;
             }
-            requestAnimationFrame(gameLoop);
         }
 
         // Keyboard controls
         document.addEventListener('keydown', (e) => {
-            if (e.key === 'ArrowRight' && direction !== 'left') nextDirection = 'right';
-            if (e.key === 'ArrowLeft' && direction !== 'right') nextDirection = 'left';
-            if (e.key === 'ArrowUp' && direction !== 'down') nextDirection = 'up';
-            if (e.key === 'ArrowDown' && direction !== 'up') nextDirection = 'down';
+            if (e.key === 'ArrowUp' && gameActive) setDirection('up');
+            if (e.key === 'ArrowDown' && gameActive) setDirection('down');
+            if (e.key === 'ArrowLeft' && gameActive) setDirection('left');
+            if (e.key === 'ArrowRight' && gameActive) setDirection('right');
         });
 
-        // Swipe controls
-        let touchStartX = 0, touchStartY = 0;
-        canvas.addEventListener('touchstart', (e) => {
-            touchStartX = e.touches[0].clientX;
-            touchStartY = e.touches[0].clientY;
-        });
-        canvas.addEventListener('touchend', (e) => {
-            const touchEndX = e.changedTouches[0].clientX;
-            const touchEndY = e.changedTouches[0].clientY;
-            const dx = touchEndX - touchStartX;
-            const dy = touchEndY - touchStartY;
-            if (Math.abs(dx) > Math.abs(dy)) {
-                if (dx > 0 && direction !== 'left') nextDirection = 'right';
-                if (dx < 0 && direction !== 'right') nextDirection = 'left';
-            } else {
-                if (dy > 0 && direction !== 'up') nextDirection = 'down';
-                if (dy < 0 && direction !== 'down') nextDirection = 'up';
-            }
-        });
+        // Game over
+        function gameOver() {
+            document.getElementById('finalItems').textContent = itemsCollected;
+            document.getElementById('gameOver').style.display = 'flex';
+            gameActive = false;
+            clearInterval(gameLoop);
+            if (spawnTimer) clearInterval(spawnTimer);
+        }
 
-        // On-screen keypad buttons
-        document.getElementById('up').addEventListener('click', () => { if (direction !== 'down') nextDirection = 'up'; });
-        document.getElementById('down').addEventListener('click', () => { if (direction !== 'up') nextDirection = 'down'; });
-        document.getElementById('left').addEventListener('click', () => { if (direction !== 'right') nextDirection = 'left'; });
-        document.getElementById('right').addEventListener('click', () => { if (direction !== 'left') nextDirection = 'right'; });
+        // Proceed to dialog
+        function nextStage() {
+            window.location.href = 'CharacterDialog.html';
+        }
 
-        // Restart buttons
-        document.getElementById('restartButton').addEventListener('click', () => {
-            resetGame();
-        });
-        document.getElementById('winRestartButton').addEventListener('click', () => {
-            resetGame();
-        });
+        // Restart game
+        function restartGame() {
+            snake = [
+                { x: 10, y: 10 }, // Head
+                { x: 9, y: 10 },  // Body segment 1
+                { x: 8, y: 10 }   // Body segment 2
+            ];
+            direction = 'right';
+            itemsCollected = 0;
+            bombsSpawned = false;
+            obstacles = [];
+            if (spawnTimer) clearInterval(spawnTimer);
+            document.getElementById('items').textContent = itemsCollected;
+            document.getElementById('finalItems').textContent = itemsCollected;
+            document.getElementById('gameOver').style.display = 'none';
+            document.getElementById('congratsPopup').style.display = 'none';
+            gameActive = true;
+            generateItem();
+            gameLoop = setInterval(update, 100);
+        }
 
-        // Start game
-        requestAnimationFrame(gameLoop);
+        // Start the game
+        function startGame() {
+            document.getElementById('startScreen').style.display = 'none';
+            document.getElementById('controls').style.display = 'flex';
+            snake = [
+                { x: 10, y: 10 }, // Head
+                { x: 9, y: 10 },  // Body segment 1
+                { x: 8, y: 10 }   // Body segment 2
+            ];
+            generateItem();
+            gameActive = true;
+            gameLoop = setInterval(update, 100);
+        }
+
+        // Initialize start screen
+        document.getElementById('startScreen').style.display = 'flex';
     </script>
 </body>
 </html>
