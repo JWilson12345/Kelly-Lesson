@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Game Over - Victory!</title>
+    <script src="https://cdn.jsdelivr.net/npm/emailjs-com@3.2.0/dist/email.min.js"></script>
     <style>
         :root {
             --primary-green: #2E7D32;
@@ -77,6 +78,18 @@
             margin: 10px 0;
         }
 
+        .modal-content input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            margin: 10px 0;
+            border: 2px solid var(--primary-green);
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: 'Roboto', sans-serif;
+            color: var(--text-dark);
+            background: #fff;
+        }
+
         .modal-content button {
             padding: 12px 24px;
             font-size: 1.2em;
@@ -96,9 +109,33 @@
             transform: translateY(-2px);
         }
 
+        .toast {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--success-green);
+            color: white;
+            padding: 10px 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px var(--shadow);
+            z-index: 2000;
+            font-size: 1em;
+            animation: fadeIn 0.3s ease-in, fadeOut 0.3s ease-out 2.7s forwards;
+        }
+
+        .toast.error {
+            background: var(--dark-coral);
+        }
+
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
+        }
+
+        @keyframes fadeOut {
+            from { opacity: 1; }
+            to { opacity: 0; }
         }
 
         @media (max-width: 600px) {
@@ -115,9 +152,19 @@
                 font-size: 1em;
             }
 
+            .modal-content input[type="text"] {
+                font-size: 0.9em;
+                padding: 8px;
+            }
+
             .modal-content button {
                 font-size: 1em;
                 padding: 10px 20px;
+            }
+
+            .toast {
+                font-size: 0.9em;
+                padding: 8px 16px;
             }
         }
 
@@ -135,29 +182,93 @@
         <div class="modal-content">
             <h1>Victory! You Escaped the Island!</h1>
             <p>Congratulations! You solved the radio code, unlocked the bullets, and fired the flare. The rescue chopper spotted your signal and safely extracted you just as the plane exploded in the distance. You're a true survivor!</p>
+            <div id="name-submission">
+                <p>Submit your name to record your win!</p>
+                <input type="text" id="player-name" placeholder="Enter your name" aria-label="Player name">
+                <button id="submit-name-btn">Submit Name</button>
+            </div>
             <button id="play-again-btn">Play Again</button>
         </div>
     </div>
 
     <script>
         (function () {
+            // Initialize EmailJS
+            emailjs.init('iPjziLz6-ui5TluiZ');
+
             const playAgainBtn = document.getElementById('play-again-btn');
+            const submitNameBtn = document.getElementById('submit-name-btn');
+            const playerNameInput = document.getElementById('player-name');
+            const nameSubmissionDiv = document.getElementById('name-submission');
             const endModal = document.getElementById('end-modal');
 
-            if (!playAgainBtn || !endModal) {
+            if (!playAgainBtn || !submitNameBtn || !playerNameInput || !nameSubmissionDiv || !endModal) {
                 console.error('One or more DOM elements are missing. Please check the HTML structure.');
                 return;
             }
 
+            // Check if name has already been submitted (stored in localStorage)
+            let isNameSubmitted = localStorage.getItem('nameSubmitted') === 'true';
+
+            // Hide name submission elements if already submitted
+            if (isNameSubmitted) {
+                nameSubmissionDiv.style.display = 'none';
+            }
+
+            function showToast(message, isError = false) {
+                const toast = document.createElement('div');
+                toast.className = `toast ${isError ? 'error' : ''}`;
+                toast.textContent = message;
+                document.body.appendChild(toast);
+                setTimeout(() => toast.remove(), 3000);
+            }
+
+            function submitName() {
+                const playerName = playerNameInput.value.trim();
+                if (!playerName) {
+                    showToast('Please enter a name.', true);
+                    return;
+                }
+
+                emailjs.send('service_637q56m', 'template_9hu2bkl', {
+                    message: `New winner: ${playerName}`,
+                    from_email: 'jacobfazer1@gmail.com',
+                    to_email: 'jacobfazer1@gmail.com'
+                })
+                    .then(() => {
+                        showToast('Name submitted successfully!');
+                        playerNameInput.value = '';
+                        isNameSubmitted = true;
+                        localStorage.setItem('nameSubmitted', 'true');
+                        nameSubmissionDiv.style.display = 'none';
+                    }, (error) => {
+                        showToast('Failed to submit name.', true);
+                        console.error('EmailJS error:', error);
+                    });
+            }
+
             function restartGame() {
+                localStorage.removeItem('nameSubmitted'); // Reset submission state on restart
                 window.location.href = 'index.html';
             }
+
+            submitNameBtn.addEventListener('click', () => {
+                try {
+                    if (!isNameSubmitted) {
+                        submitName();
+                    }
+                } catch (error) {
+                    console.error('Error in submit name action:', error);
+                    showToast('An error occurred.', true);
+                }
+            });
 
             playAgainBtn.addEventListener('click', () => {
                 try {
                     restartGame();
                 } catch (error) {
                     console.error('Error in restart action:', error);
+                    showToast('An error occurred.', true);
                 }
             });
         })();
