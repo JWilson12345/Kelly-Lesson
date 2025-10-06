@@ -18,13 +18,10 @@
             --text-dark: #333;
             --text-light: #666;
         }
-
         @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-
         * {
             box-sizing: border-box;
         }
-
         body {
             font-family: 'Roboto', sans-serif;
             background: linear-gradient(to bottom, #87CEEB 0%, var(--sand-beige) 100%);
@@ -37,7 +34,6 @@
             min-height: 100vh;
             overflow-x: hidden;
         }
-
         .game-wrapper {
             background: linear-gradient(145deg, var(--parchment), #FFF8E1);
             border-radius: 15px;
@@ -48,7 +44,6 @@
             text-align: center;
             border: 3px solid var(--primary-green);
         }
-
         h1 {
             font-size: 2.5em;
             margin: 0.5em 0;
@@ -56,14 +51,12 @@
             font-weight: 700;
             text-shadow: 2px 2px 4px var(--shadow);
         }
-
         p {
             font-size: 1.1em;
             line-height: 1.5;
             margin: 10px 0;
             color: var(--text-dark);
         }
-
         #game-container {
             width: 500px;
             height: 400px;
@@ -75,7 +68,6 @@
             overflow: hidden;
             box-shadow: 0 4px 8px var(--shadow);
         }
-
         .debris {
             position: absolute;
             width: 25px;
@@ -85,11 +77,9 @@
             cursor: pointer;
             transition: transform 0.2s ease;
         }
-
         .debris:hover {
             transform: scale(1.2);
         }
-
         #timer, #message {
             font-size: 1.5em;
             font-weight: 700;
@@ -97,7 +87,6 @@
             color: var(--ocean-blue);
             text-shadow: 1px 1px 2px var(--shadow);
         }
-
         #start-btn, #retry-btn, #continue-btn {
             padding: 12px 24px;
             font-size: 1.2em;
@@ -111,12 +100,10 @@
             margin: 10px;
             box-shadow: 0 4px 8px var(--shadow);
         }
-
         #start-btn:hover, #retry-btn:hover, #continue-btn:hover {
             background: linear-gradient(135deg, var(--dark-coral), var(--coral));
             transform: translateY(-2px);
         }
-
         .modal {
             display: none;
             position: fixed;
@@ -130,7 +117,6 @@
             z-index: 1000;
             animation: fadeIn 0.5s ease-in;
         }
-
         .modal-content {
             background: linear-gradient(145deg, var(--parchment), #FFF8E1);
             padding: 20px;
@@ -141,18 +127,15 @@
             box-shadow: 0 6px 12px var(--shadow);
             border: 3px solid var(--primary-green);
         }
-
         .modal-content h2 {
             color: var(--success-green);
             font-size: 1.8em;
             margin: 0.5em 0;
         }
-
         .modal-content p {
             color: var(--text-dark);
             font-size: 1.1em;
         }
-
         #fail-screen {
             display: none;
             margin: 20px auto;
@@ -165,17 +148,14 @@
             border: 3px solid var(--primary-green);
             text-align: center;
         }
-
         #fail-screen h2 {
             color: var(--dark-coral);
             font-size: 1.8em;
         }
-
         #fail-screen p {
             color: var(--text-dark);
             font-size: 1.1em;
         }
-
         .flare-animation {
             display: none;
             position: fixed;
@@ -188,7 +168,6 @@
             justify-content: center;
             align-items: center;
         }
-
         .flare {
             width: 20px;
             height: 20px;
@@ -196,47 +175,38 @@
             border-radius: 50%;
             animation: flareLaunch 2s ease-out forwards;
         }
-
         @keyframes flareLaunch {
             0% { transform: translateY(0); opacity: 1; }
             100% { transform: translateY(-100vh); opacity: 0; }
         }
-
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
         @media (max-width: 600px) {
             .game-wrapper {
                 padding: 15px;
             }
-
             h1 {
                 font-size: 2em;
             }
-
             p, #timer, #message {
                 font-size: 1em;
             }
-
             #game-container {
                 width: 100%;
                 max-width: 400px;
                 height: 300px;
             }
-
             #start-btn, #retry-btn, #continue-btn {
                 font-size: 1em;
                 padding: 10px 20px;
             }
-
             .modal-content, #fail-screen {
                 width: 90%;
                 padding: 15px;
             }
         }
-
         @media (prefers-reduced-motion: reduce) {
             * {
                 animation-duration: 0.01ms !important;
@@ -254,18 +224,15 @@
         <div id="timer">Time: 90 seconds</div>
         <div id="game-container"></div>
         <div id="message">Hits: 0 / 100</div>
-
         <div id="fail-screen">
             <h2>Mission Failed!</h2>
             <p>You couldn't unlock the bullets in time. Try again!</p>
             <button id="retry-btn">Retry Mission</button>
         </div>
-
         <div id="flare-animation" class="flare-animation">
             <div class="flare"></div>
         </div>
     </div>
-
     <div id="win-modal" class="modal">
         <div id="win-screen" class="modal-content">
             <h2>You did it!</h2>
@@ -273,37 +240,40 @@
             <button id="continue-btn">Continue</button>
         </div>
     </div>
-
+    <audio id="soundtrack" loop>
+        <source src="sounds/soundtrackshooter.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
     <script type="text/javascript">
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
         var gk_fileData = {};
         function filledCell(cell) {
-          return cell !== '' && cell != null;
+            return cell !== '' && cell != null;
         }
         function loadFileData(filename) {
-        if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
-            try {
-                var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
-                var firstSheetName = workbook.SheetNames[0];
-                var worksheet = workbook.Sheets[firstSheetName];
-                var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
-                var filteredData = jsonData.filter(row => row.some(filledCell));
-                var headerRowIndex = filteredData.findIndex((row, index) =>
-                  row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
-                );
-                if (headerRowIndex === -1 || headerRowIndex > 25) {
-                  headerRowIndex = 0;
+            if (gk_isXlsx && gk_xlsxFileLookup[filename]) {
+                try {
+                    var workbook = XLSX.read(gk_fileData[filename], { type: 'base64' });
+                    var firstSheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[firstSheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1, blankrows: false, defval: '' });
+                    var filteredData = jsonData.filter(row => row.some(filledCell));
+                    var headerRowIndex = filteredData.findIndex((row, index) =>
+                        row.filter(filledCell).length >= filteredData[index + 1]?.filter(filledCell).length
+                    );
+                    if (headerRowIndex === -1 || headerRowIndex > 25) {
+                        headerRowIndex = 0;
+                    }
+                    var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
+                    csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
+                    return csv;
+                } catch (e) {
+                    console.error(e);
+                    return "";
                 }
-                var csv = XLSX.utils.aoa_to_sheet(filteredData.slice(headerRowIndex));
-                csv = XLSX.utils.sheet_to_csv(csv, { header: 1 });
-                return csv;
-            } catch (e) {
-                console.error(e);
-                return "";
             }
-        }
-        return gk_fileData[filename] || "";
+            return gk_fileData[filename] || "";
         }
     </script>
     <script>
@@ -317,19 +287,17 @@
             const winModal = document.getElementById('win-modal');
             const failScreen = document.getElementById('fail-screen');
             const flareAnimation = document.getElementById('flare-animation');
-
-            if (!gameContainer || !timerElement || !messageElement || !startBtn || !retryBtn || !continueBtn || !winModal || !failScreen || !flareAnimation) {
+            const soundtrack = document.getElementById('soundtrack');
+            if (!gameContainer || !timerElement || !messageElement || !startBtn || !retryBtn || !continueBtn || !winModal || !failScreen || !flareAnimation || !soundtrack) {
                 console.error('One or more DOM elements are missing. Please check the HTML structure.');
                 return;
             }
-
             let timeLeft = 90;
             let hits = 0;
             const targetHits = 100;
             let gameInterval;
             let debrisInterval;
             let timerInterval;
-
             function startGame() {
                 hits = 0;
                 timeLeft = 90;
@@ -340,11 +308,12 @@
                 winModal.style.display = 'none';
                 failScreen.style.display = 'none';
                 flareAnimation.style.display = 'none';
-
                 timerInterval = setInterval(updateTimer, 1000);
                 debrisInterval = setInterval(createDebris, 500);
+                soundtrack.play().catch(error => {
+                    console.error('Audio playback failed:', error);
+                });
             }
-
             function updateTimer() {
                 timeLeft--;
                 timerElement.textContent = `Time: ${timeLeft} seconds`;
@@ -352,13 +321,11 @@
                     endGame(false);
                 }
             }
-
             function createDebris() {
                 const debris = document.createElement('div');
                 debris.classList.add('debris');
                 debris.style.left = `${Math.random() * (500 - 25)}px`;
                 debris.style.top = `${Math.random() * (400 - 25)}px`;
-
                 debris.addEventListener('click', () => {
                     debris.remove();
                     hits++;
@@ -367,16 +334,13 @@
                         endGame(true);
                     }
                 });
-
                 setTimeout(() => {
                     if (debris.parentNode) {
                         debris.remove();
                     }
                 }, 800);
-
                 gameContainer.appendChild(debris);
             }
-
             function endGame(success) {
                 clearInterval(timerInterval);
                 clearInterval(debrisInterval);
@@ -385,6 +349,7 @@
                 if (success) {
                     winModal.style.display = 'flex';
                     flareAnimation.style.display = 'flex';
+                    soundtrack.pause();
                     setTimeout(() => {
                         flareAnimation.style.display = 'none';
                     }, 2000);
@@ -392,11 +357,9 @@
                     failScreen.style.display = 'block';
                 }
             }
-
             function nextStage() {
                 window.location.href = 'CharacterDialog6.html';
             }
-
             startBtn.addEventListener('click', startGame);
             retryBtn.addEventListener('click', startGame);
             continueBtn.addEventListener('click', () => {
@@ -409,4 +372,4 @@
         })();
     </script>
 </body>
-</html>
+</html>	
