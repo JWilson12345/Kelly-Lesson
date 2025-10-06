@@ -196,7 +196,6 @@
         <div class="inventory">Items Collected: <span id="items">0</span></div>
         <div class="story-text">
             We might be eble to signal them if we find a raido!
-			
         </div>
         <canvas id="gameCanvas" width="350" height="400"></canvas>
         <div class="game-over" id="gameOver">
@@ -214,7 +213,10 @@
             <button class="start-button" onclick="startGame()">Start</button>
         </div>
     </div>
-
+    <audio id="soundtrack" loop>
+        <source src="sounds/soundtracksnake.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
     <script>
     const canvas = document.getElementById('gameCanvas');
     const ctx = canvas.getContext('2d');
@@ -237,18 +239,17 @@
     const bombLifetime = 12000;
     const spawnIntervalTime = 3000;
     const maxBombs = 5;
-
     const dpr = window.devicePixelRatio || 1;
     canvas.width = canvasLogicalWidth * dpr;
     canvas.height = canvasLogicalHeight * dpr;
     canvas.style.width = `${canvasLogicalWidth}px`;
     canvas.style.height = `${canvasLogicalHeight}px`;
     ctx.scale(dpr, dpr);
-
     let touchStartX = 0;
     let touchStartY = 0;
     let lastDirectionChange = 0;
     const debounceTime = 100;
+    const soundtrack = document.getElementById('soundtrack');	
 
     function spawnBomb() {
         if (obstacles.length >= maxBombs) return;
@@ -426,7 +427,7 @@
         gameLoop = setInterval(update, 100);
     }
 
-    function startGame() {
+            function startGame() {
         document.getElementById('startScreen').style.display = 'none';
         snake = [
             { x: 5, y: 10 },
@@ -437,9 +438,11 @@
         generateItem();
         gameActive = true;
         gameLoop = setInterval(update, 100);
+        soundtrack.play().catch(error => {
+            console.error('Audio playback failed:', error);
+        });
     }
-
-    document.getElementById('startScreen').style.display = 'flex';
+        document.getElementById('startScreen').style.display = 'flex';
 </script>
 </body>
 </html>
