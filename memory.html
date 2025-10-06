@@ -147,7 +147,10 @@
         <p id="failureMessage">Too many flips! Try again?</p>
         <button id="retryButton">Retry</button>
     </div>
-
+    <audio id="soundtrack" loop>
+        <source src="sounds/soundtrackmemory.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
     <script type="text/javascript">
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
@@ -181,30 +184,30 @@
         }
     </script>
     <script>
-        (function () {
-            const canvas = document.getElementById('gameCanvas');
-            const ctx = canvas.getContext('2d');
-            const startPopup = document.getElementById('startPopup');
-            const startGameButton = document.getElementById('startGameButton');
-            const cardSymbols = [
-                '🛩️', '🛩️', '🧳', '🧳', '📻', '📻', '🔑', '🔑',
-                '🧰', '🧰', '🛠️', '🛠️', '📦', '📦', '🔒', '🔒',
-                '🧪', '🧪', '🧴', '🧴', '🛡️', '🛡️', '🪓', '🪓',
-                '🗝️', '🗝️', '🔨', '🔨', '🧵', '🧵', '⛺', '⛺',
-                '🧨', '🧨', '🗺️', '🗺️'
-            ];
-            let cards = [];
-            let flippedCards = [];
-            let matchedPairs = 0;
-            let flips = 0;
-            let gameOver = false;
-            let isProcessing = false;
-            const maxFlips = 500;
-
-            if (!canvas || !ctx || !startPopup || !startGameButton) {
-                console.error('One or more DOM elements are missing. Please check the HTML structure.');
-                return;
-            }
+    (function () {
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const startPopup = document.getElementById('startPopup');
+        const startGameButton = document.getElementById('startGameButton');
+        const soundtrack = document.getElementById('soundtrack');
+        const cardSymbols = [
+            '🛩️', '🛩️', '🧳', '🧳', '📻', '📻', '🔑', '🔑',
+            '🧰', '🧰', '🛠️', '🛠️', '📦', '📦', '🔒', '🔒',
+            '🧪', '🧪', '🧴', '🧴', '🛡️', '🛡️', '🪓', '🪓',
+            '🗝️', '🗝️', '🔨', '🔨', '🧵', '🧵', '⛺', '⛺',
+            '🧨', '🧨', '🗺️', '🗺️'
+        ];
+        let cards = [];
+        let flippedCards = [];
+        let matchedPairs = 0;
+        let flips = 0;
+        let gameOver = false;
+        let isProcessing = false;
+        const maxFlips = 500;
+        if (!canvas || !ctx || !startPopup || !startGameButton || !soundtrack) {
+            console.error('One or more DOM elements are missing. Please check the HTML structure.');
+            return;
+        }
 
             function shuffle(array) {
                 for (let i = array.length - 1; i > 0; i--) {
@@ -386,10 +389,15 @@
                 handleClick(x, y);
             });
 
-            startGameButton.addEventListener('click', () => {
+                        startGameButton.addEventListener('click', () => {
+                soundtrack.play().catch(error => {
+                    console.error('Audio playback failed:', error);
+                });
                 startPopup.style.display = 'none';
                 resetGame();
             });
+            document.getElementById('continueButton').addEventListener('click', nextStage);
+            document.getElementById('retryButton').addEventListener('click', resetGame);
 
             document.getElementById('continueButton').addEventListener('click', nextStage);
             document.getElementById('retryButton').addEventListener('click', resetGame);
