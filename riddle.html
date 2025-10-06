@@ -17,11 +17,9 @@
             --text-dark: #333;
             --text-light: #666;
         }
-
         * {
             box-sizing: border-box;
         }
-
         body {
             display: flex;
             flex-direction: column;
@@ -35,19 +33,16 @@
             overflow-x: hidden;
             padding: 1rem;
         }
-
         .radio-emoji {
             font-size: clamp(4rem, 20vw, 8rem);
             margin-bottom: 1rem;
             filter: drop-shadow(0 4px 8px var(--shadow));
             animation: pulse 2s ease-in-out infinite;
         }
-
         @keyframes pulse {
             0%, 100% { transform: scale(1); }
             50% { transform: scale(1.05); }
         }
-
         #riddleContainer {
             background: linear-gradient(145deg, var(--parchment), #FFF8E1);
             padding: 2rem;
@@ -60,7 +55,6 @@
             position: relative;
             overflow: hidden;
         }
-
         #riddleContainer::before {
             content: '';
             position: absolute;
@@ -70,7 +64,6 @@
             height: 4px;
             background: linear-gradient(to right, var(--ocean-blue), var(--teal));
         }
-
         #riddleText {
             font-size: clamp(1.5rem, 4vw, 2.5rem);
             color: var(--primary-green);
@@ -79,7 +72,6 @@
             line-height: 1.3;
             text-shadow: 0 2px 4px var(--shadow);
         }
-
         #hintText {
             font-size: clamp(1rem, 3vw, 1.25rem);
             color: var(--ocean-blue);
@@ -90,12 +82,10 @@
             transform: translateY(10px);
             transition: opacity 0.3s ease, transform 0.3s ease;
         }
-
         #hintText.show {
             opacity: 1;
             transform: translateY(0);
         }
-
         .input-group {
             display: flex;
             flex-direction: column;
@@ -103,7 +93,6 @@
             gap: 1rem;
             margin-bottom: 1rem;
         }
-
         #answerInput {
             padding: 0.75rem 1rem;
             font-size: 1rem;
@@ -116,18 +105,15 @@
             background: white;
             text-align: center;
         }
-
         #answerInput:focus {
             border-color: var(--teal);
             box-shadow: 0 0 0 3px rgba(38, 166, 154, 0.1);
             transform: scale(1.02);
         }
-
         #answerInput::placeholder {
             color: var(--text-light);
             font-style: italic;
         }
-
         #submitButton {
             padding: 0.75rem 2rem;
             font-size: 1rem;
@@ -140,19 +126,16 @@
             transition: all 0.3s ease;
             box-shadow: 0 4px 12px rgba(255, 111, 97, 0.3);
         }
-
         #submitButton:hover:not(:disabled) {
             background: linear-gradient(135deg, var(--dark-coral), var(--coral));
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 111, 97, 0.4);
         }
-
         #submitButton:disabled {
             opacity: 0.6;
             cursor: not-allowed;
             transform: none;
         }
-
         .popup {
             display: none;
             position: fixed;
@@ -167,7 +150,6 @@
             z-index: 1000;
             animation: fadeIn 0.4s ease-out;
         }
-
         .popup-content {
             background: linear-gradient(145deg, var(--parchment), #FFF8E1);
             color: var(--text-dark);
@@ -182,14 +164,12 @@
             transform: scale(0.9);
             animation: popupSlideIn 0.4s ease-out forwards;
         }
-
         .popup p {
             font-size: clamp(1.25rem, 4vw, 2rem);
             margin: 1rem 0;
             font-weight: 600;
             line-height: 1.4;
         }
-
         .popup button {
             padding: 1rem 2rem;
             font-size: 1.125rem;
@@ -203,48 +183,39 @@
             box-shadow: 0 4px 12px rgba(255, 111, 97, 0.3);
             margin-top: 1rem;
         }
-
         .popup button:hover {
             background: linear-gradient(135deg, var(--dark-coral), var(--coral));
             transform: translateY(-2px);
             box-shadow: 0 6px 20px rgba(255, 111, 97, 0.4);
         }
-
         @keyframes fadeIn {
             from { opacity: 0; }
             to { opacity: 1; }
         }
-
         @keyframes popupSlideIn {
             to {
                 transform: scale(1);
             }
         }
-
         /* Mobile optimizations */
         @media (max-width: 600px) {
             body {
                 padding: 0.5rem;
             }
-
             #riddleContainer {
                 padding: 1.5rem;
             }
-
             .input-group {
                 gap: 0.75rem;
             }
-
             #answerInput {
                 max-width: none;
             }
-
             .popup-content {
                 padding: 1.5rem;
                 margin: 1rem;
             }
         }
-
         /* Accessibility */
         @media (prefers-reduced-motion: reduce) {
             * {
@@ -264,10 +235,10 @@
         <h1 id="riddleText" class="sr-only">Riddle: I speak without a mouth and hear without ears. I have no body, but I come alive with the wind. What am I?</h1>
         <p id="hintText" role="status" aria-live="polite"></p>
         <div class="input-group">
-            <input 
-                type="text" 
-                id="answerInput" 
-                placeholder="Type your answer here..." 
+            <input
+                type="text"
+                id="answerInput"
+                placeholder="Type your answer here..."
                 autocomplete="off"
                 aria-describedby="submitButton"
                 aria-label="Enter your answer to the riddle"
@@ -275,22 +246,28 @@
             <button id="submitButton" aria-describedby="answerInput">Submit Answer</button>
         </div>
     </main>
-
+    <div id="startPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="startMessage">
+        <div class="popup-content">
+            <p id="startMessage">You found a radio! Solve the riddle to make contact.</p>
+            <button id="startGameButton">Start Game</button>
+        </div>
+    </div>
     <div id="successPopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="successMessage">
         <div class="popup-content">
             <p id="successMessage">Yes we figured it out.'We hear you, what's your location? We can help right away.</p>
-
             <button id="continueButton">Continue to Next</button>
         </div>
     </div>
-
     <div id="failurePopup" class="popup" role="dialog" aria-modal="true" aria-labelledby="failureMessage">
         <div class="popup-content">
             <p id="failureMessage">Signal lost! The wind carried your words away. Try again?</p>
             <button id="retryButton">Retry Riddle</button>
         </div>
     </div>
-
+    <audio id="soundtrack" loop>
+        <source src="sounds/soundtrackriddle.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
     <script>
         // Modern ES6+ JavaScript with improved structure and accessibility
         class RiddleGame {
@@ -304,19 +281,17 @@
                 ];
                 this.init();
             }
-
             init() {
                 this.bindEvents();
-                document.getElementById('answerInput').focus();
+                document.getElementById('startPopup').style.display = 'flex';
+                document.getElementById('startGameButton').focus();
             }
-
             resetGame() {
                 this.attempts = 3;
                 const input = document.getElementById('answerInput');
                 const hint = document.getElementById('hintText');
                 const successPopup = document.getElementById('successPopup');
                 const failurePopup = document.getElementById('failurePopup');
-
                 input.value = '';
                 hint.style.display = 'none';
                 hint.classList.remove('show');
@@ -326,17 +301,14 @@
                 input.focus();
                 document.getElementById('submitButton').disabled = false;
             }
-
             nextStage() {
                 window.location.href = 'CharacterDialog3.html';
             }
-
             checkAnswer() {
                 const input = document.getElementById('answerInput');
                 const answer = input.value.trim().toLowerCase();
                 const hint = document.getElementById('hintText');
                 const submitBtn = document.getElementById('submitButton');
-
                 if (answer === this.correctAnswer) {
                     document.getElementById('successPopup').style.display = 'flex';
                     submitBtn.disabled = true;
@@ -354,13 +326,20 @@
                     }
                 }
             }
-
             bindEvents() {
                 const input = document.getElementById('answerInput');
                 const submitBtn = document.getElementById('submitButton');
                 const continueBtn = document.getElementById('continueButton');
                 const retryBtn = document.getElementById('retryButton');
-
+                const startGameButton = document.getElementById('startGameButton');
+                const soundtrack = document.getElementById('soundtrack');
+                startGameButton.addEventListener('click', () => {
+                    soundtrack.play().catch(error => {
+                        console.error('Audio playback failed:', error);
+                    });
+                    document.getElementById('startPopup').style.display = 'none';
+                    document.getElementById('answerInput').focus();
+                });
                 submitBtn.addEventListener('click', () => this.checkAnswer());
                 input.addEventListener('keypress', (e) => {
                     if (e.key === 'Enter') {
@@ -372,7 +351,6 @@
                 retryBtn.addEventListener('click', () => this.resetGame());
             }
         }
-
         // Initialize the game
         const game = new RiddleGame();
     </script>
