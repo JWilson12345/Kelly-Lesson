@@ -285,7 +285,6 @@
         <h1>Codebreaker</h1>
         <div class="level-info">Moves: <span id="moves">0</span>/10 | Score: <span id="score">0</span> | Hints Used: <span id="hints-used">0</span>/2</div>
         <div class="base-phrase">"Hurry and solve the code!"</div>
-
         <div class="clues">
             <h2>Clues:</h2>
             <div class="clue">The key is not next to the radio.</div>
@@ -293,34 +292,28 @@
             <div class="clue">The suitcase is next to the key.</div>
             <div class="clue">The radio is not in the bottom row.</div>
         </div>
-
         <div class="grid" id="grid">
             <div class="cell" data-pos="0"></div>
             <div class="cell" data-pos="1"></div>
             <div class="cell" data-pos="2"></div>
             <div class="cell" data-pos="3"></div>
         </div>
-
         <div class="inventory">
             <div class="item" data-item="🧳">🧳</div>
             <div class="item" data-item="📻">📻</div>
             <div class="item" data-item="🔑">🔑</div>
             <div class="item" data-item="🧰">🧰</div>
         </div>
-
         <div class="controls">
             <button id="submit">Submit</button>
             <button id="hint">Hint</button>
             <button id="reset">Reset</button>
         </div>
-
         <div class="progress-bar">
             <div class="progress" id="progress"></div>
         </div>
-
         <div class="feedback" id="feedback"></div>
     </div>
-
     <!-- Instructions Modal -->
     <div class="modal" id="instructions-modal">
         <div class="modal-content">
@@ -332,7 +325,6 @@
                 <ul>Click "Submit" to validate your placement.</ul>
         </div>
     </div>
-
     <!-- Success Modal -->
     <div class="modal" id="success-modal">
         <div class="modal-content">
@@ -341,7 +333,10 @@
             <button id="continue">Continue</button>
         </div>
     </div>
-
+    <audio id="soundtrack" loop>
+        <source src="sounds/soundtrackcode.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
     <script type="text/javascript">
         var gk_isXlsx = false;
         var gk_xlsxFileLookup = {};
@@ -374,54 +369,53 @@
         return gk_fileData[filename] || "";
         }
     </script>
-    <script>
-        (function () {
-            let selectedItem = null;
-            let moves = 0;
-            let score = 0;
-            let hintsUsed = 0;
-            const maxMoves = 10;
-            const maxHints = 2;
-            const gridSize = 4;
-            const items = ['🧳', '📻', '🔑', '🧰'];
-            const correctPositions = [2, 0, 3, 1];
-            const hints = [
-                "Place the toolbox in the top row, perhaps on the right.",
-                "The radio should be in the top row, not the bottom."
-            ];
-            let gridState = Array(gridSize).fill(null);
-            let itemUsage = new Map(items.map(item => [item, false]));
+    <script>    (function () {
+        let selectedItem = null;
+        let moves = 0;
+        let score = 0;
+        let hintsUsed = 0;
+        const maxMoves = 10;
+        const maxHints = 2;
+        const gridSize = 4;
+        const items = ['🧳', '📻', '🔑', '🧰'];
+        const correctPositions = [2, 0, 3, 1];
+        const hints = [
+            "Place the toolbox in the top row, perhaps on the right.",
+            "The radio should be in the top row, not the bottom."
+        ];
+        let gridState = Array(gridSize).fill(null);
+        let itemUsage = new Map(items.map(item => [item, false]));
+        const grid = document.getElementById('grid');
+        const cells = grid ? grid.querySelectorAll('.cell') : [];
+        const inventoryItems = document.querySelectorAll('.item');
+        const submitBtn = document.getElementById('submit');
+        const hintBtn = document.getElementById('hint');
+        const resetBtn = document.getElementById('reset');
+        const movesEl = document.getElementById('moves');
+        const scoreEl = document.getElementById('score');
+        const hintsUsedEl = document.getElementById('hints-used');
+        const feedbackEl = document.getElementById('feedback');
+        const progressEl = document.getElementById('progress');
+        const instructionsModal = document.getElementById('instructions-modal');
+        const closeInstructions = document.getElementById('close-instructions');
+        const successModal = document.getElementById('success-modal');
+        const closeSuccess = document.getElementById('close-success');
+        const continueBtn = document.getElementById('continue');
+        const soundtrack = document.getElementById('soundtrack');
+        if (!grid || !cells.length || !submitBtn || !hintBtn || !resetBtn || !movesEl || !scoreEl || !hintsUsedEl || !feedbackEl || !progressEl || !instructionsModal || !closeInstructions || !successModal || !closeSuccess || !continueBtn || !soundtrack) {
+            console.error('One or more DOM elements are missing. Please check the HTML structure.');
+            return;
+        }	
 
-            const grid = document.getElementById('grid');
-            const cells = grid ? grid.querySelectorAll('.cell') : [];
-            const inventoryItems = document.querySelectorAll('.item');
-            const submitBtn = document.getElementById('submit');
-            const hintBtn = document.getElementById('hint');
-            const resetBtn = document.getElementById('reset');
-            const movesEl = document.getElementById('moves');
-            const scoreEl = document.getElementById('score');
-            const hintsUsedEl = document.getElementById('hints-used');
-            const feedbackEl = document.getElementById('feedback');
-            const progressEl = document.getElementById('progress');
-            const instructionsModal = document.getElementById('instructions-modal');
-            const closeInstructions = document.getElementById('close-instructions');
-            const successModal = document.getElementById('success-modal');
-            const closeSuccess = document.getElementById('close-success');
-            const continueBtn = document.getElementById('continue');
-
-            if (!grid || !cells.length || !submitBtn || !hintBtn || !resetBtn || !movesEl || !scoreEl || !hintsUsedEl || !feedbackEl || !progressEl || !instructionsModal || !closeInstructions || !successModal || !closeSuccess || !continueBtn) {
-                console.error('One or more DOM elements are missing. Please check the HTML structure.');
-                return;
-            }
-
-            window.addEventListener('load', () => {
+                        window.addEventListener('load', () => {
                 instructionsModal.style.display = 'flex';
             });
-
             closeInstructions.addEventListener('click', () => {
+                soundtrack.play().catch(error => {
+                    console.error('Audio playback failed:', error);
+                });
                 instructionsModal.style.display = 'none';
             });
-
             closeSuccess.addEventListener('click', () => {
                 successModal.style.display = 'none';
             });
