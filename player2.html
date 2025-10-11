@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Riddle Quest Adventure - Player 2</title>
+    <style>
+        :root {
+            --primary-green: #2E7D32;
+            --ocean-blue: #4A90E2;
+            --sand-beige: #F4E4BC;
+            --parchment: #FDF6E3;
+            --coral: #FF6F61;
+            --dark-coral: #E55A50;
+            --teal: #26A69A;
+            --success-green: #4CAF50;
+            --shadow: rgba(0, 0, 0, 0.2);
+            --text-dark: #333;
+            --text-light: #666;
+        }
+        @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+        * {
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Roboto', sans-serif;
+            background: linear-gradient(to bottom, #87CEEB 0%, var(--sand-beige) 100%);
+            color: var(--text-dark);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 20px;
+            overflow-x: hidden;
+        }
+        .container {
+            background: linear-gradient(145deg, var(--parchment), #FFF8E1);
+            border-radius: 15px;
+            box-shadow: 0 6px 12px var(--shadow);
+            padding: 30px;
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            border: 3px solid var(--primary-green);
+        }
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            color: var(--primary-green);
+            font-weight: 700;
+            text-shadow: 0 2px 4px var(--shadow);
+        }
+        .riddle {
+            font-size: 1.2em;
+            font-style: italic;
+            margin-bottom: 20px;
+            padding: 15px;
+            background: linear-gradient(145deg, var(--parchment), #FFF8E1);
+            border-left: 4px solid var(--ocean-blue);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px var(--shadow);
+            color: var(--text-dark);
+        }
+        .answer-box {
+            margin: 20px 0;
+        }
+        .answer-input {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid var(--ocean-blue);
+            border-radius: 6px;
+            width: 200px;
+            text-align: center;
+            margin-right: 10px;
+        }
+        .answer-input:focus {
+            outline: none;
+            border-color: var(--teal);
+            box-shadow: 0 0 5px var(--teal);
+        }
+        .code-assembly {
+            margin: 20px 0;
+        }
+        .code-assembly input {
+            padding: 10px;
+            font-size: 1em;
+            border: 2px solid var(--ocean-blue);
+            border-radius: 6px;
+            width: 150px;
+            text-align: center;
+            margin: 5px;
+        }
+        .controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            background: linear-gradient(135deg, var(--coral), var(--dark-coral));
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: 600;
+            transition: background 0.3s, transform 0.2s;
+            box-shadow: 0 4px 8px var(--shadow);
+        }
+        button:hover:not(:disabled) {
+            background: linear-gradient(135deg, var(--dark-coral), var(--coral));
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background: var(--text-light);
+            cursor: not-allowed;
+            transform: none;
+        }
+        .feedback {
+            font-size: 1.1em;
+            margin-top: 20px;
+            color: var(--dark-coral);
+        }
+        .success {
+            color: var(--success-green);
+        }
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            justify-content: center;
+            align-items: center;
+            animation: fadeIn 0.5s ease-in;
+        }
+        .modal-content {
+            background: linear-gradient(145deg, var(--parchment), #FFF8E1);
+            padding: 20px;
+            border-radius: 15px;
+            max-width: 500px;
+            text-align: center;
+            box-shadow: 0 6px 12px var(--shadow);
+            border: 3px solid var(--primary-green);
+        }
+        .close {
+            float: right;
+            cursor: pointer;
+            font-size: 1.5em;
+            color: var(--text-dark);
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @media (max-width: 600px) {
+            h1 {
+                font-size: 2em;
+            }
+            .riddle {
+                font-size: 1em;
+            }
+            .answer-input, .code-assembly input {
+                width: 150px;
+                font-size: 0.9em;
+            }
+            button {
+                font-size: 0.9em;
+                padding: 8px 16px;
+            }
+            .modal-content {
+                padding: 15px;
+                max-width: 90%;
+            }
+        }
+        @media (prefers-reduced-motion: reduce) {
+            * {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Player 2</h1>
+        <div class="riddle">
+            What is full of holes but still holds water?
+        </div>
+        <div class="answer-box">
+            <input type="text" class="answer-input" id="player-answer" placeholder="Your riddle answer">
+            <button id="submit-answer">Submit Answer</button>
+        </div>
+        <div class="code-assembly" id="code-assembly" style="display: none;">
+            <h3>Assemble the Code Pieces (in order 1-4)</h3>
+            <input type="text" id="code1" placeholder="Code 1">
+            <input type="text" id="code2" placeholder="Code 2">
+            <input type="text" id="code3" placeholder="Code 3">
+            <input type="text" id="code4" placeholder="Code 4">
+            <button id="submit-final">Submit Final Code</button>
+        </div>
+        <div class="controls">
+            <button id="hint">Hint</button>
+            <button id="reset">Reset</button>
+        </div>
+        <div class="feedback" id="feedback"></div>
+    </div>
+    <!-- Instructions Modal -->
+    <div class="modal" id="instructions-modal">
+        <div class="modal-content">
+            <span class="close" id="close-instructions">&times;</span>
+            <h2>How to Play:</h2>
+            <ul>Solve your riddle to discover your code piece.</ul>
+            <ul>Collect code pieces from all players.</ul>
+            <ul>Enter them in order (1-4) in the assembly section.</ul>
+            <ul>Use "Hint" for guidance on your riddle.</ul>
+            <ul>Click "Reset" to clear inputs and try again.</ul>
+        </div>
+    </div>
+    <!-- Success Modal -->
+    <div class="modal" id="success-modal">
+        <div class="modal-content">
+            <span class="close" id="close-success">&times;</span>
+            <h2>Code Unlocked!</h2>
+            <p id="final-code"></p>
+            <button id="continue">Continue</button>
+        </div>
+    </div>
+    <audio id="soundtrack" loop>
+        <source src="sounds/riddlequest_soundtrack.mp3" type="audio/mpeg">
+        Your browser does not support the audio element.
+    </audio>
+    <script>
+        (function () {
+            const correctAnswer = "sponge"; // Player 2's riddle answer, which is their code piece
+            const finalCode = ["candle", "sponge", "light", "fire"]; // Full code pieces in order
+            const hint = "This is an object that, despite having many tiny openings, can absorb and retain liquid within those openings.";
+            // DOM elements
+            const answerInput = document.getElementById("player-answer");
+            const submitBtn = document.getElementById("submit-answer");
+            const hintBtn = document.getElementById("hint");
+            const resetBtn = document.getElementById("reset");
+            const feedbackEl = document.getElementById("feedback");
+            const codeAssembly = document.getElementById("code-assembly");
+            const code1 = document.getElementById("code1");
+            const code2 = document.getElementById("code2");
+            const code3 = document.getElementById("code3");
+            const code4 = document.getElementById("code4");
+            const submitFinalBtn = document.getElementById("submit-final");
+            const instructionsModal = document.getElementById("instructions-modal");
+            const closeInstructions = document.getElementById("close-instructions");
+            const successModal = document.getElementById("success-modal");
+            const closeSuccess = document.getElementById("close-success");
+            const continueBtn = document.getElementById("continue");
+            const finalCodeEl = document.getElementById("final-code");
+            const soundtrack = document.getElementById("soundtrack");
+            // Error checking for DOM elements
+            if (!answerInput || !submitBtn || !hintBtn || !resetBtn || !feedbackEl || !codeAssembly || !code1 || !code2 || !code3 || !code4 || !submitFinalBtn || !instructionsModal || !closeInstructions || !successModal || !closeSuccess || !continueBtn || !finalCodeEl || !soundtrack) {
+                console.error("One or more DOM elements are missing. Please check the HTML structure.");
+                return;
+            }
+            // Show instructions on load
+            window.addEventListener("load", () => {
+                instructionsModal.style.display = "flex";
+                soundtrack.play().catch(error => console.error("Audio playback failed:", error));
+            });
+            closeInstructions.addEventListener("click", () => {
+                instructionsModal.style.display = "none";
+            });
+            closeSuccess.addEventListener("click", () => {
+                successModal.style.display = "none";
+            });
+            // Submit riddle answer
+            submitBtn.addEventListener("click", () => {
+                try {
+                    const playerAnswer = answerInput.value.trim().toLowerCase();
+                    if (!playerAnswer) {
+                        feedbackEl.textContent = "Please enter an answer.";
+                        return;
+                    }
+                    if (playerAnswer === correctAnswer) {
+                        feedbackEl.classList.add("success");
+                        feedbackEl.textContent = `Correct! Your code piece is: ${correctAnswer}`;
+                        codeAssembly.style.display = "block";
+                        answerInput.disabled = true;
+                        submitBtn.disabled = true;
+                        hintBtn.style.display = "none"; // Hide the Hint button
+                    } else {
+                        feedbackEl.textContent = "Incorrect answer. Try again!";
+                    }
+                } catch (error) {
+                    console.error("Error in submit action:", error);
+                    feedbackEl.textContent = "An error occurred. Please try again.";
+                }
+            });
+            // Submit final code
+            submitFinalBtn.addEventListener("click", () => {
+                try {
+                    const enteredCodes = [
+                        code1.value.trim().toLowerCase(),
+                        code2.value.trim().toLowerCase(),
+                        code3.value.trim().toLowerCase(),
+                        code4.value.trim().toLowerCase()
+                    ];
+                    if (enteredCodes.some(code => !code)) {
+                        feedbackEl.textContent = "Please enter all code pieces.";
+                        return;
+                    }
+                    if (enteredCodes.every((code, i) => code === finalCode[i])) {
+                        feedbackEl.classList.add("success");
+                        feedbackEl.textContent = "Final code correct!";
+                        finalCodeEl.textContent = `Nice one`;
+                        successModal.style.display = "flex";
+                    } else {
+                        feedbackEl.textContent = "Incorrect final code. Check the order and try again!";
+                    }
+                } catch (error) {
+                    console.error("Error in final submit action:", error);
+                    feedbackEl.textContent = "An error occurred. Please try again.";
+                }
+            });
+            // Hint button
+            hintBtn.addEventListener("click", () => {
+                try {
+                    feedbackEl.textContent = hint;
+                } catch (error) {
+                    console.error("Error in hint action:", error);
+                }
+            });
+            // Reset button
+            resetBtn.addEventListener("click", () => {
+                try {
+                    resetGame();
+                } catch (error) {
+                    console.error("Error in reset action:", error);
+                }
+            });
+            // Continue to next stage
+            continueBtn.addEventListener("click", () => {
+                try {
+                    window.location.href = "CharacterDialog3.html"; // Placeholder for next stage
+                } catch (error) {
+                    console.error("Error in continue action:", error);
+                }
+            });
+            function resetGame() {
+                try {
+                    answerInput.value = "";
+                    answerInput.disabled = false;
+                    submitBtn.disabled = false;
+                    hintBtn.style.display = "block"; // Show Hint button on reset
+                    codeAssembly.style.display = "none";
+                    code1.value = "";
+                    code2.value = "";
+                    code3.value = "";
+                    code4.value = "";
+                    feedbackEl.textContent = "";
+                } catch (error) {
+                    console.error("Error in resetGame:", error);
+                }
+            }
+        })();
+    </script>
+</body>
+</html>
