@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crash Landing Intro</title>
+    <style>
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('https://via.placeholder.com/800x600.png?text=Desert+Island+Sunset') no-repeat center center fixed;
+            background-size: cover;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+            font-family: 'Courier New', Courier, monospace;
+            overflow: hidden;
+        }
+        .character-container {
+            position: relative;
+            text-align: right;
+            width: 100%;
+            max-width: 800px;
+            padding: 10px;
+            animation: slideIn 1s ease-out;
+        }
+        #skye {
+            width: 350px;
+            height: auto;
+            border: 5px solid #f5e050;
+            border-radius: 10px;
+            box-shadow: 0 0 20px rgba(245, 224, 80, 0.7);
+            margin-right: 20px;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .speech-bubble {
+            position: absolute;
+            background: #f0e6cc;
+            border: 4px solid #8b4513;
+            border-radius: 15px;
+            padding: 10px;
+            width: 200px;
+            text-align: center;
+            top: -80px;
+            left: 140px;
+            transform: translateX(-50%);
+            box-shadow: 0 0 15px rgba(139, 69, 19, 0.5);
+            background: linear-gradient(135deg, #f0e6cc 0%, #d2b48c 100%);
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            bottom: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            border-width: 15px;
+            border-style: solid;
+            border-color: #8b4513 transparent transparent transparent;
+        }
+        .typing-text {
+            margin: 0;
+            font-size: 16px;
+            color: #2f2f2f;
+            white-space: pre-wrap;
+            opacity: 1;
+            overflow: hidden;
+            display: block;
+        }
+        @keyframes type {
+            0% { width: 0; }
+            100% { width: 100%; }
+        }
+        @keyframes fadeIn {
+            to { opacity: 1; }
+        }
+        @keyframes slideIn {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        .speech-bubble button {
+            background: #8b4513;
+            border: none;
+            padding: 10px 20px;
+            color: #f0e6cc;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: 8px;
+            margin-top: 10px;
+            transition: background 0.3s;
+        }
+        .speech-bubble button:hover {
+            background: #6b2e0e;
+        }
+        #start-button {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #8b4513;
+            border: none;
+            padding: 15px 30px;
+            color: #f0e6cc;
+            font-size: 18px;
+            cursor: pointer;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(139, 69, 19, 0.5);
+        }
+        #start-button:hover {
+            background: #6b2e0e;
+        }
+        /* Responsive Adjustments for Mobile Devices */
+        @media (max-width: 480px) {
+            .speech-bubble {
+                width: 140px;
+                top: -80px;
+                left: 140px;
+                padding: 8px;
+            }
+            .typing-text {
+                font-size: 12px;
+            }
+            .speech-bubble button {
+                padding: 6px 12px;
+                font-size: 10px;
+            }
+        }
+        @media (min-width: 481px) and (max-width: 768px) {
+            .speech-bubble {
+                width: 160px;
+                top: -80px;
+                left: 140px;
+                padding: 8px;
+            }
+            .typing-text {
+                font-size: 14px;
+            }
+            .speech-bubble button {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <button id="start-button">Talk To Survivor</button>
+    <div class="character-container" style="display: none;">
+        <div class="speech-bubble">
+            <div class="typing-text" id="dialog-text"></div>
+            <button id="continue-button" onclick="nextDialog()" disabled>Continue</button>
+        </div>
+        <img id="skye" src="images/7.png" alt="Skye the Survivor">
+    </div>
+
+    <script>
+        (function () {
+            const dialogText = document.getElementById('dialog-text');
+            const startButton = document.getElementById('start-button');
+            const characterContainer = document.querySelector('.character-container');
+            const continueButton = document.getElementById('continue-button');
+            const dialogs = [
+                "I can't believe you did it!",
+                "The chopper can find us,",
+                "We're all safe now!"
+            ];
+            const soundFiles = [
+                'Dialog/Dialog6/1.mp3',
+                'Dialog/Dialog6/2.mp3',
+                'Dialog/Dialog6/3.mp3'
+            ];
+            let currentDialog = 0;
+            let currentAudio = null;
+
+            if (!dialogText || !continueButton) {
+                console.error('Dialog text or continue button is missing. Please check the HTML structure.');
+                return;
+            }
+
+            function typeText(text) {
+                dialogText.style.width = '0';
+                dialogText.textContent = '';
+                continueButton.disabled = true; // Disable Continue button during typing
+                let i = 0;
+                function type() {
+                    if (i < text.length) {
+                        dialogText.textContent += text.charAt(i);
+                        i++;
+                        setTimeout(type, 50);
+                    } else {
+                        continueButton.disabled = false; // Enable Continue button when typing is complete
+                    }
+                }
+                type();
+                dialogText.style.animation = 'type 1.5s steps(20, end) forwards';
+            }
+
+            function playSound(index) {
+                if (currentAudio) {
+                    currentAudio.pause();
+                    currentAudio.currentTime = 0;
+                }
+                currentAudio = new Audio(soundFiles[index]);
+                currentAudio.play().catch(error => console.error('Audio playback failed:', error));
+            }
+
+            function startConversation() {
+                startButton.disabled = true; // Disable Talk To Survivor button to prevent multiple clicks
+                startButton.style.display = 'none';
+                characterContainer.style.display = 'block';
+                typeText(dialogs[0]);
+                playSound(0);
+            }
+
+            function nextDialog() {
+                if (currentDialog < dialogs.length - 1) {
+                    currentDialog++;
+                    typeText(dialogs[currentDialog]);
+                    playSound(currentDialog);
+                } else if (currentDialog === dialogs.length - 1) {
+                    window.location.href = 'end.html';
+                }
+            }
+
+            // Expose nextDialog to global scope for onclick
+            window.nextDialog = nextDialog;
+
+            startButton.addEventListener('click', startConversation);
+        })();
+    </script>
+</body>
+</html>
