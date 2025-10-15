@@ -232,8 +232,7 @@
 <body>
     <div class="radio-emoji" aria-hidden="true">📻</div>
     <main id="riddleContainer" role="main" aria-labelledby="riddleText">
-        <h1 id="riddleText" class="sr-only">Riddle: I stop the flow, stitch and mend, small and quiet - your healing friend
-</h1>
+        <h1 id="riddleText" class="sr-only">Riddle: I stop the flow, stitch and mend, small and quiet - your healing friend</h1>
         <p id="hintText" role="status" aria-live="polite"></p>
         <div class="input-group">
             <input
@@ -276,9 +275,9 @@
                 this.attempts = 3;
                 this.correctAnswer = 'Bandage';
                 this.hints = [
-                    'Think about something that carries sound.',
-                    'It’s something you might notice in a canyon or on this island.',
-                    'The answer starts with "e" and relates to how voices travel.'
+                    'What do you put on a cut to stop bleeding?',
+                    'It helps heal wounds and comes in a first aid kit.',
+                    'Think medical - it wraps around injuries.'
                 ];
                 this.init();
             }
@@ -310,7 +309,7 @@
                 const answer = input.value.trim().toLowerCase();
                 const hint = document.getElementById('hintText');
                 const submitBtn = document.getElementById('submitButton');
-                if (answer === this.correctAnswer) {
+                if (answer === this.correctAnswer.toLowerCase()) {
                     document.getElementById('successPopup').style.display = 'flex';
                     submitBtn.disabled = true;
                 } else {
