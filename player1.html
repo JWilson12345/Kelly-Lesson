@@ -239,7 +239,7 @@
         (function () {
             const correctAnswer = "Newspaper"; // Player 1's riddle answer, which is their code piece
             const finalCode = ["Newspaper", "Water", "Map", "Time"]; // Full code pieces in order
-            const hint = "This is something that starts tall and gets shorter as it is used over time, often through burning.";
+            const hint = "Think of something you read, often printed with ink on paper.";
             // DOM elements
             const answerInput = document.getElementById("player-answer");
             const submitBtn = document.getElementById("submit-answer");
@@ -283,7 +283,7 @@
                         feedbackEl.textContent = "Please enter an answer.";
                         return;
                     }
-                    if (playerAnswer === correctAnswer) {
+                    if (playerAnswer === correctAnswer.toLowerCase()) {
                         feedbackEl.classList.add("success");
                         feedbackEl.textContent = `Correct! Your code piece is: ${correctAnswer}`;
                         codeAssembly.style.display = "block";
@@ -311,7 +311,7 @@
                         feedbackEl.textContent = "Please enter all code pieces.";
                         return;
                     }
-                    if (enteredCodes.every((code, i) => code === finalCode[i])) {
+                    if (enteredCodes.every((code, i) => code === finalCode[i].toLowerCase())) {
                         feedbackEl.classList.add("success");
                         feedbackEl.textContent = "Final code correct!";
                         finalCodeEl.textContent = `Nice one`;
@@ -367,6 +367,4 @@
         })();
     </script>
 </body>
-
 </html>
-
