@@ -239,7 +239,7 @@
         (function () {
             const correctAnswer = "Time"; // Player 4's riddle answer, which is their code piece
             const finalCode = ["Newspaper", "Water", "Map", "Time"]; // Full code pieces in order
-            const hint = "This is something that needs constant fuel to keep going and leaves a mark of destruction, often red, on what it consumes.";
+            const hint = "You can't see me, but you check me on your watch. I wait for no one.";
             // DOM elements
             const answerInput = document.getElementById("player-answer");
             const submitBtn = document.getElementById("submit-answer");
@@ -283,7 +283,7 @@
                         feedbackEl.textContent = "Please enter an answer.";
                         return;
                     }
-                    if (playerAnswer === correctAnswer) {
+                    if (playerAnswer === correctAnswer.toLowerCase()) {
                         feedbackEl.classList.add("success");
                         feedbackEl.textContent = `Correct! Your code piece is: ${correctAnswer}`;
                         codeAssembly.style.display = "block";
@@ -311,7 +311,7 @@
                         feedbackEl.textContent = "Please enter all code pieces.";
                         return;
                     }
-                    if (enteredCodes.every((code, i) => code === finalCode[i])) {
+                    if (enteredCodes.every((code, i) => code === finalCode[i].toLowerCase())) {
                         feedbackEl.classList.add("success");
                         feedbackEl.textContent = "Final code correct!";
                         finalCodeEl.textContent = `Nice one`;
@@ -367,6 +367,4 @@
         })();
     </script>
 </body>
-
 </html>
-
